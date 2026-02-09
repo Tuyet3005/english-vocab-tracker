@@ -168,7 +168,6 @@
       const code = codeElement.textContent;
 
       navigator.clipboard.writeText(code).then(() => {
-        alert('Code copied to clipboard! Opening authentication page...');
         // Open authentication page in new tab
         window.open(verificationUri, '_blank');
       }).catch(err => {

@@ -90,7 +90,8 @@ const settings = {
 async function loadState() {
   try {
     const data = await get(STATE_KEY, 'string');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data.data);
+    if (parsed && data.data != '{}') return parsed;
   } catch (err) {
     if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
       console.log('No state found in Tigris storage, using default state');
@@ -147,7 +148,7 @@ let serverState = {
 async function loadCache() {
   try {
     const data = await get(CACHE_KEY, 'string');
-    return JSON.parse(data);
+    return JSON.parse(data.data);
   } catch (err) {
     if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
       console.log('No cache found in Tigris storage');
@@ -190,7 +191,7 @@ async function getCachedData(sheetUrl, sheetName = '') {
 async function loadStatsCache() {
   try {
     const data = await get(STATS_CACHE_KEY, 'string');
-    return JSON.parse(data);
+    return JSON.parse(data.data);
   } catch (err) {
     if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
       console.log('No stats cache found in Tigris storage');
