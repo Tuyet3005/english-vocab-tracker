@@ -458,12 +458,32 @@
     /* Word Cards Styles */
     .word-cards-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-      padding: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      padding: 15px;
       background: #f8fcff;
       border-radius: 16px;
-      margin: 20px 0;
+      margin: 15px auto;
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    @media (max-width: 768px) {
+      .word-cards-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 10px;
+        margin: 10px auto;
+        border-radius: 12px;
+      }
+    }
+    @media (max-width: 480px) {
+      .word-cards-container {
+        padding: 8px;
+        gap: 10px;
+        margin: 8px auto;
+        border-radius: 8px;
+      }
     }
     .word-card {
       background: linear-gradient(145deg, #ffffff 0%, #f9fdff 100%);
