@@ -797,7 +797,7 @@
             document.getElementById('dataContainerFilterMode').innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
           }
         } else {
-          document.getElementById('dataContainerAllVocab').innerHTML = renderSheetData(currentData, allVocabReverseOrder, false);
+          document.getElementById('dataContainerAllVocab').innerHTML = renderAllVocabWithTopics(currentData, allVocabReverseOrder);
         }
       }
     }
@@ -1243,7 +1243,7 @@
       
       // Re-render All vocab mode with the new sort order
       if (currentData) {
-        document.getElementById('dataContainerAllVocab').innerHTML = renderSheetData(currentData, allVocabReverseOrder, false);
+        document.getElementById('dataContainerAllVocab').innerHTML = renderAllVocabWithTopics(currentData, allVocabReverseOrder);
       }
     }
 
@@ -1404,7 +1404,7 @@
           if (forceRefresh) {
             containerFilter.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
           }
-          containerAll.innerHTML = renderSheetData(data, allVocabReverseOrder, false);
+          containerAll.innerHTML = renderAllVocabWithTopics(data, allVocabReverseOrder);
         }
       } catch (err) {
         console.error('Failed to load sheet data:', err);
@@ -1469,6 +1469,98 @@
       }
 
       html += '</div>';
+      return html;
+    }
+
+    // Render all vocabulary with simple layout for All Vocab Mode
+    function renderAllVocabWithTopics(data, reverseOrder = false) {
+      let html = '';
+      
+      if (data.worksheets && data.worksheets.length > 0) {
+        data.worksheets.forEach(worksheet => {
+          if (worksheet.topics && worksheet.topics.length > 0) {
+            // Sort topics if needed
+            let topicsToRender = [...worksheet.topics];
+            if (reverseOrder) {
+              topicsToRender.reverse();
+            }
+            
+            // Render each topic simply
+            topicsToRender.forEach(topic => {
+              // Topic name only
+              html += `<h3>📚 ${escapeHtml(topic.name)}</h3>`;
+              
+              // Statistics in simple format
+              if (topic.statistics) {
+                html += `<div>📈 Statistics 🆕 New: ${topic.statistics.byFlag.new} | ✅ Known: ${topic.statistics.byFlag.known} | ❓ Forgotten: ${topic.statistics.byFlag.forgotten} | 👍 Learned: ${topic.statistics.byFlag.learned}</div>`;
+              }
+              
+              // Simple table without containers
+              html += `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Flag</th>
+                      <th>Word</th>
+                      <th>POS</th>
+                      <th>Pronunciation</th>
+                      <th>Meaning (VI)</th>
+                      <th>Example</th>
+                      <th>Synonyms</th>
+                      <th>Day</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+              `;
+              
+              // Render words in simple table rows
+              topic.words.forEach((word, idx) => {
+                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                let bgColor = '';
+                
+                if (flagValue === 'n') {
+                  bgColor = '#fcdcdf'; // New - pastel pink
+                } else if (flagValue === 'y') {
+                  bgColor = '#c6e0b4'; // Known - pastel green
+                } else if (flagValue === 'ok') {
+                  bgColor = '#fff2cc'; // Learned - pastel yellow
+                } else if (flagValue === '?') {
+                  bgColor = '#ffeb9c'; // Forgotten - pastel yellow
+                }
+                
+                const tdStyle = bgColor ? `background-color: ${bgColor} !important;` : '';
+                html += `
+                  <tr>
+                    <td style="${tdStyle}">${escapeHtml(word.order || (idx + 1))}</td>
+                    <td style="text-align: center;${tdStyle}">${escapeHtml(word.flag || '')}</td>
+                    <td style="font-weight: bold;${tdStyle}">${escapeHtml(word.word)}</td>
+                    <td style="${tdStyle}"><em>${escapeHtml(word.partOfSpeech)}</em></td>
+                    <td style="${tdStyle}">${escapeHtml(word.pronunciation)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.meaning)}</td>
+                    <td style="font-style: italic;${tdStyle}">${boldWordInExample(word.word, word.exampleSentence)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.synonyms)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.dayOfWeek)}</td>
+                    <td style="${tdStyle}">${escapeHtml(formatDate(word.date))}</td>
+                  </tr>
+                `;
+              });
+              
+              html += `
+                  </tbody>
+                </table>
+                <br>
+              `;
+            });
+          } else {
+            html += '<div class="error">No topics found in this worksheet</div>';
+          }
+        });
+      } else {
+        html += '<div class="error">No worksheet data found</div>';
+      }
+      
       return html;
     }
 
@@ -1590,7 +1682,62 @@
       return html;
     }
 
-    // Render a single topic with card layout for vocabulary words
+    // Render a single topic with card layout for vocabulary words (preserving original order)
+    function renderTopicAsCardsWithOriginalOrder(topic) {
+      let html = `<div class="word-cards-container">`;
+
+      // Use original word order (no sorting)
+      const wordsToRender = topic.words || [];
+
+      wordsToRender.forEach((word, idx) => {
+        const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+        let flagClass = '';
+        let flagText = '';
+        
+        if (flagValue === 'n') {
+          flagClass = 'new';
+          flagText = 'N';
+        } else if (flagValue === 'y') {
+          flagClass = 'known';
+          flagText = 'Y';
+        } else if (flagValue === 'ok') {
+          flagClass = 'learned';
+          flagText = 'OK';
+        } else if (flagValue === '?') {
+          flagClass = 'forgotten';
+          flagText = '?';
+        } else {
+          flagClass = '';
+          flagText = flagValue || '';
+        }
+
+        html += `
+          <div class="word-card flag-${flagClass}">
+            <div class="card-number">${idx + 1}</div>
+            ${flagText ? `<div class="card-flag ${flagClass}">${escapeHtml(flagText)}</div>` : ''}
+            <div class="word-main">
+              <div class="word-english">${escapeHtml(word.word)}</div>
+              ${word.pronunciation ? `<div class="word-pronunciation">${escapeHtml(word.pronunciation)}</div>` : ''}
+              ${word.partOfSpeech ? `<div class="word-pos">${escapeHtml(word.partOfSpeech)}</div>` : ''}
+            </div>
+            ${word.meaning ? `<div class="word-meaning">${escapeHtml(word.meaning)}</div>` : ''}
+            ${word.synonyms ? `
+              <div class="word-synonyms">
+                <div class="synonyms-label">Synonyms</div>
+                <div class="synonyms-text">${escapeHtml(word.synonyms)}</div>
+              </div>
+            ` : ''}
+            ${word.exampleSentence ? `<div class="word-example">${boldWordInExample(word.word, word.exampleSentence)}</div>` : ''}
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+
+      return html;
+    }
+
+    // Render a single topic with card layout for vocabulary words (sorted alphabetically)
     function renderTopicAsCards(topic) {
       let html = `<div class="word-cards-container">`;
 
@@ -1637,7 +1784,7 @@
                 <div class="synonyms-text">${escapeHtml(word.synonyms)}</div>
               </div>
             ` : ''}
-            ${word.exampleSentence ? `<div class="word-example">${escapeHtml(word.exampleSentence)}</div>` : ''}
+            ${word.exampleSentence ? `<div class="word-example">${boldWordInExample(word.word, word.exampleSentence)}</div>` : ''}
           </div>
         `;
       });
@@ -1679,6 +1826,22 @@
       }
 
       return html;
+    }
+
+    // Helper function to bold the vocabulary word in example sentences
+    function boldWordInExample(word, exampleSentence) {
+      if (!word || !exampleSentence) return escapeHtml(exampleSentence || '');
+      
+      // Escape the example sentence first
+      let escaped = escapeHtml(exampleSentence);
+      
+      // Create a regex to find the word (case-insensitive, whole words only)
+      const regex = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+      
+      // Replace occurrences with bold black version
+      escaped = escaped.replace(regex, '<strong style="color: black;">$1</strong>');
+      
+      return escaped;
     }
 
     // Helper function to escape HTML
@@ -1851,7 +2014,7 @@
       // Render data immediately
       const containerAll = document.getElementById('dataContainerAllVocab');
       if (containerAll) {
-        const renderedData = renderSheetData(data, false, false);
+        const renderedData = renderAllVocabWithTopics(data, false);
         console.log('📝 Rendered HTML length:', renderedData.length);
         containerAll.innerHTML = renderedData;
       }
