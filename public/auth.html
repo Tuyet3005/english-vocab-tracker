@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication - 🌼Vocab tracker 🌼 --- Tuyết</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    .auth-section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+    .auth-section p {
+      margin: 10px 0;
+      color: #666;
+      line-height: 1.6;
+    }
+    .code-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .code {
+      font-size: 24px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      color: #0078d4;
+      padding: 15px 20px;
+      background: white;
+      border: 2px solid #0078d4;
+      border-radius: 4px;
+      letter-spacing: 2px;
+    }
+    .btn {
+      padding: 12px 24px;
+      background: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+      margin: 5px;
+    }
+    .btn:hover {
+      background: #005a9e;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    .status {
+      margin: 20px 0;
+      padding: 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status.waiting {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Authentication Required</h1>
+
+    <div class="auth-section" id="authSection">
+      <div class="loading">Initializing authentication...</div>
+    </div>
+
+    <div id="statusContainer"></div>
+  </div>
+
+  <script>
+    let pollingInterval = null;
+
+    // Initialize authentication
+    async function initAuth() {
+      const authSection = document.getElementById('authSection');
+
+      try {
+        // Check current status first
+        const statusResponse = await fetch('/api/auth/status');
+        const statusData = await statusResponse.json();
+
+        if (statusData.authenticated) {
+          window.location.href = '/';
+          return;
+        }
+
+        // If we have device code info, display it
+        if (statusData.userCode && statusData.verificationUri) {
+          displayAuthInstructions(statusData.userCode, statusData.verificationUri);
+          startPolling();
+          return;
+        }
+
+        // Otherwise, start new authentication
+        const response = await fetch('/api/auth/start', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.success && data.userCode) {
+          displayAuthInstructions(data.userCode, data.verificationUri);
+          startPolling();
+        } else {
+          authSection.innerHTML = '<div class="error">Failed to start authentication</div>';
+        }
+      } catch (err) {
+        console.error('Auth initialization failed:', err);
+        authSection.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+      }
+    }
+
+    // Display authentication instructions
+    function displayAuthInstructions(userCode, verificationUri) {
+      const authSection = document.getElementById('authSection');
+
+      authSection.innerHTML = `
+        <p><strong>Step:</strong> Click the button below to copy the code and open the authentication page</p>
+
+        <div class="code-display">
+          <div class="code" id="userCode">${userCode}</div>
+          <button class="btn" onclick="copyAndRedirect('${verificationUri}')">Copy and Redirect</button>
+        </div>
+
+        <div class="status waiting">
+          ⏳ Waiting for authentication to complete...
+        </div>
+      `;
+    }
+
+    // Copy code to clipboard and redirect to authentication page
+    function copyAndRedirect(verificationUri) {
+      const codeElement = document.getElementById('userCode');
+      const code = codeElement.textContent;
+
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Code copied to clipboard! Opening authentication page...');
+        // Open authentication page in new tab
+        window.open(verificationUri, '_blank');
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy code. Opening authentication page anyway...');
+        window.open(verificationUri, '_blank');
+      });
+    }
+
+    // Start polling for authentication completion
+    function startPolling() {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+
+      pollingInterval = setInterval(async () => {
+        try {
+          const response = await fetch('/api/auth/poll');
+          const data = await response.json();
+
+          if (data.authenticated) {
+            clearInterval(pollingInterval);
+            showSuccess();
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1500);
+          }
+        } catch (err) {
+          console.error('Polling failed:', err);
+        }
+      }, 3000); // Poll every 3 seconds
+    }
+
+    // Show success message
+    function showSuccess() {
+      const statusContainer = document.getElementById('statusContainer');
+      statusContainer.innerHTML = `
+        <div class="status success">
+          ✓ Authentication successful! Redirecting...
+        </div>
+      `;
+    }
+
+    // Initialize on page load
+    initAuth();
+  </script>
+</body>
+</html>

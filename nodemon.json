@@ -1,0 +1,6 @@
+{
+  "watch": ["server.js", "lib/**/*.js"],
+  "ignore": ["server-state.json", "public/**/*", "node_modules/**/*"],
+  "ext": "js",
+  "delay": "1000"
+}

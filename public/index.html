@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌼Vocab tracker 🌼 --- Tuyết</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f8fc;
+    }
+    .auth-warning {
+      background: #fff3cd;
+      color: #856404;
+      padding: 12px 20px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #ffeaa7;
+      display: none;
+    }
+    .auth-warning.show {
+      display: block;
+    }
+    .auth-warning a {
+      color: #0078d4;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .sheet-url-section {
+      margin: 20px 0;
+      padding: 24px;
+      background: linear-gradient(135deg, #fff5f9 0%, #e8f4fd 100%);
+      border-radius: 12px;
+      border: 2px solid rgba(102, 126, 234, 0.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    .sheet-url-section label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+      letter-spacing: 0.3px;
+    }
+    .url-input-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .sheet-url-section input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    .sheet-url-section input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .sheet-url-section input.sheet-name-input {
+      flex: 0 0 200px;
+      min-width: 150px;
+    }
+    .sheet-url-section button {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #cbdffa 0%, #b8d4f1 100%);
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(203, 223, 250, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .sheet-url-section button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: left 0.5s;
+    }
+    .sheet-url-section button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(203, 223, 250, 0.4);
+    }
+    .sheet-url-section button:hover::before {
+      left: 100%;
+    }
+    .sheet-url-section .btn-refresh {
+      background: linear-gradient(135deg, #ff77b1 0%, #ff5a95 100%);
+      box-shadow: 0 4px 15px rgba(255, 119, 177, 0.3);
+    }
+    .sheet-url-section .btn-refresh:hover {
+      box-shadow: 0 6px 25px rgba(255, 119, 177, 0.4);
+    }
+    .data-section {
+      margin-top: 25px;
+    }
+    .data-section h2 {
+      color: #555;
+    }
+    .stats-summary {
+      background: linear-gradient(135deg, #fff5f9 0%, #f5f8fc 100%);
+      border: none;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .stat-item {
+      text-align: center;
+      padding: 20px 16px;
+      background: white;
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    .stat-item .stat-label {
+      font-size: 13px;
+      color: #666;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .stat-item .stat-count {
+      font-size: 36px;
+      font-weight: 700;
+      color: #2e7d32;
+    }
+    .stat-item.new {
+      background: linear-gradient(135deg, #ff77b1 0%, #ff5a95 100%);
+      color: white;
+    }
+    .stat-item.new .stat-label {
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .stat-item.new .stat-count {
+      color: white;
+    }
+    .stat-item.forgotten {
+      background: linear-gradient(135deg, #ffbf00 0%, #ffa500 100%);
+      color: white;
+    }
+    .stat-item.forgotten .stat-label {
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .stat-item.forgotten .stat-count {
+      color: white;
+    }
+    .stat-item.learned {
+      background: linear-gradient(135deg, #cbdffa 0%, #a8d5ff 100%);
+      color: #1a5490;
+    }
+    .stat-item.learned .stat-label {
+      color: #1a5490;
+    }
+    .stat-item.learned .stat-count {
+      color: #1a5490;
+    }
+    .stat-item.known {
+      background: linear-gradient(135deg, #e9ffe9 0%, #d4f5d4 100%);
+      color: #2e7d32;
+    }
+    .stat-item.known .stat-label {
+      color: #2e7d32;
+    }
+    .stat-item.known .stat-count {
+      color: #2e7d32;
+    }
+    .cache-info {
+      font-size: 12px;
+      color: #666;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #e9ffe9 0%, #f5f8fc 100%);
+      border-radius: 8px;
+      display: inline-block;
+      white-space: nowrap;
+      border: 1px solid rgba(46, 125, 50, 0.1);
+    }
+    .cache-info.fresh {
+      background: linear-gradient(135deg, #fff5f9 0%, #ffefe7 100%);
+      border: 1px solid rgba(255, 119, 177, 0.1);
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .error {
+      color: #d13438;
+      padding: 10px;
+      background: #fef0f0;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .worksheet {
+      margin: 20px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .worksheet-header {
+      background: #0078d4;
+      color: white;
+      padding: 10px 15px;
+      font-weight: bold;
+    }
+    .worksheet-info {
+      background: #f0f0f0;
+      padding: 8px 15px;
+      font-size: 12px;
+      color: #666;
+    }
+    .table-container {
+      overflow-x: auto;
+      max-height: 600px;
+      overflow-y: auto;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #fff9f7;
+      border: 1px solid rgba(255, 119, 177, 0.1);
+      border-radius: 12px;
+    }
+    .tabs-container {
+      margin-top: 25px;
+      display: flex;
+      gap: 12px;
+      background: linear-gradient(90deg, rgba(240, 248, 255, 0.5) 0%, rgba(255, 255, 255, 0.5) 100%);
+      padding: 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    .tab-button {
+      padding: 12px 28px;
+      background: #ffffff;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      font-weight: 600;
+      color: #555;
+      border-radius: 10px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .tab-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+      transition: left 0.5s;
+    }
+    .tab-button:hover {
+      border-color: #c0c0c0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+    .tab-button:hover::before {
+      left: 100%;
+    }
+    .tab-button.active {
+      background: linear-gradient(135deg, #f5c2ef 0%, #f0a8e8 100%);
+      color: #333;
+      border-color: transparent;
+      box-shadow: 0 6px 20px rgba(245, 194, 239, 0.4);
+    }
+    .tab-content {
+      display: none;
+      padding-top: 25px;
+      animation: fadeIn 0.4s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+    }
+    th {
+      background: linear-gradient(135deg, #f3c2ef 0%, #edb4e8 100%);
+      color: #333;
+      padding: 14px 12px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border: none;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    th:first-child {
+      border-radius: 8px 0 0 0;
+    }
+    th:last-child {
+      border-radius: 0 8px 0 0;
+    }
+    td {
+      padding: 12px;
+      border: none;
+      background: white;
+      transition: all 0.2s ease;
+    }
+    tr {
+      transition: all 0.2s ease;
+    }
+    tr:hover td {
+      background: rgba(243, 194, 239, 0.08);
+    }
+    tbody tr:hover {
+      background-color: rgba(243, 194, 239, 0.05);
+    }
+    tr:nth-child(even) td {
+      background: rgba(243, 194, 239, 0.02);
+    }
+    tr:nth-child(even):hover td {
+      background: rgba(243, 194, 239, 0.08);
+    }
+    tr:hover td {
+      background: rgba(243, 194, 239, 0.08);
+    }
+    .file-info {
+      background: #e8f4f8;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .file-info h3 {
+      margin: 0 0 10px 0;
+      color: #0078d4;
+    }
+    .file-info p {
+      margin: 5px 0;
+      color: #666;
+    }
+    .topic-filter-buttons {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .topic-filter-buttons button {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #f93b1d 0%, #ea1e63 100%);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(249, 59, 29, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .topic-filter-buttons button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    .topic-filter-buttons button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(249, 59, 29, 0.4);
+    }
+    .topic-filter-buttons button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    .topic-filter-buttons button[style*="background: #666"] {
+      background: linear-gradient(135deg, #757575 0%, #424242 100%) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .topic-filter-buttons button[style*="background: #666"]:hover {
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    }
+    .filter-status {
+      color: #f93b1d;
+      font-weight: 600;
+      font-size: 14px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.7;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="authWarning" class="auth-warning">
+      ⚠️ Authentication expired or not completed. <a onclick="window.location.href='/auth.html'">Click here to authenticate</a>. You can still view cached data below.
+    </div>
+    
+    <h1>🌼Vocab tracker 🌼 --- Tuyết</h1>
+
+    <div class="sheet-url-section">
+      <label for="sheetUrl">Excel Sheet URL:</label>
+      <div class="url-input-group">
+        <input type="text" id="sheetUrl" placeholder="Enter SharePoint/OneDrive sharing link">
+        <input type="text" id="sheetName" class="sheet-name-input" placeholder="Sheet name (optional)">
+        <button onclick="updateSheetUrl()">Update URL</button>
+        <button class="btn-refresh" onclick="refreshSheetData()">🔄 Refresh Data</button>
+        <div id="cacheInfo" style="margin-left: auto;"></div>
+      </div>
+    </div>
+
+    <div class="data-section">
+      <div id="statsSummary" class="stats-summary" style="display: none;">
+        <div class="stat-item new">
+          <div class="stat-label">🆕 New</div>
+          <div class="stat-count" id="statNew">0</div>
+        </div>
+        <div class="stat-item forgotten">
+          <div class="stat-label">❓ Forgotten</div>
+          <div class="stat-count" id="statForgotten">0</div>
+        </div>
+        <div class="stat-item learned">
+          <div class="stat-label">👍 Learned</div>
+          <div class="stat-count" id="statLearned">0</div>
+        </div>
+        <div class="stat-item known">
+          <div class="stat-label">✅ Known</div>
+          <div class="stat-count" id="statKnown">0</div>
+        </div>
+        <div class="stat-item total" style="background: linear-gradient(135deg, #f3c2ef 0%, #eda8e8 100%); color: #333;">
+          <div class="stat-label" style="color: #333;">📊 Total Words</div>
+          <div class="stat-count" id="statTotal" style="color: #d946a6; font-size: 36px;">0</div>
+        </div>
+        <div class="stat-item topics" style="background: linear-gradient(135deg, #c7bcf6 0%, #b0a5ed 100%); color: #333;">
+          <div class="stat-label" style="color: #333;">📚 Topics</div>
+          <div class="stat-count" id="statTopics" style="color: #6d4fa8; font-size: 36px;">0</div>
+        </div>
+      </div>
+      <div class="tabs-container">
+        <button class="tab-button active" onclick="switchTab('filterMode')">🔍 Filter mode</button>
+        <button class="tab-button" onclick="switchTab('allVocabMode')">📚 All vocab mode</button>
+      </div>
+      <div id="filterMode" class="tab-content active">
+        <div class="topic-filter-buttons">
+          <button onclick="filterByNewestTopic()">📍 Newest Topic</button>
+          <button onclick="clearFilter()" id="clearFilterBtn" style="display: none; background: #666;">Clear Filter</button>
+          <span id="filterStatus"></span>
+        </div>
+        <div id="dataContainerFilterMode" class="loading">Loading...</div>
+      </div>
+      <div id="allVocabMode" class="tab-content">
+        <div class="topic-filter-buttons">
+          <button onclick="toggleAllVocabSortOrder()" id="sortOrderBtn">📊 Newest → Oldest</button>
+        </div>
+        <div id="dataContainerAllVocab" class="loading">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.getElementById('filterMode').classList.remove('active');
+      document.getElementById('allVocabMode').classList.remove('active');
+      
+      // Remove active class from all buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      
+      // Add active class to clicked button
+      event.target.classList.add('active');
+      
+      // Re-render data in the active tab
+      if(currentData) {
+        if(tabName === 'filterMode') {
+          if(isFiltered) {
+            // Re-render filtered view
+            const worksheet = currentData.worksheets[0];
+            const newestTopic = worksheet.topics[worksheet.topics.length - 1];
+            const topicCount = newestTopic.words.length;
+            const filteredData = {
+              ...currentData,
+              worksheets: [{
+                ...worksheet,
+                topics: [newestTopic],
+                statistics: {
+                  totalTopics: 1,
+                  totalWords: topicCount,
+                  byFlag: calculateTopicStats([newestTopic])
+                }
+              }]
+            };
+            document.getElementById('dataContainerFilterMode').innerHTML = renderSheetData(filteredData);
+          } else {
+            // Show empty state message in filter mode
+            document.getElementById('dataContainerFilterMode').innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+          }
+        } else {
+          document.getElementById('dataContainerAllVocab').innerHTML = renderSheetData(currentData, allVocabReverseOrder, false);
+        }
+      }
+    }
+
+    // Store the full data globally for filtering
+    let currentData = null;
+    let isFiltered = false;
+    let allVocabReverseOrder = false;
+
+    // Filter to show only the newest topic
+    function filterByNewestTopic() {
+      if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
+        alert('No data to filter');
+        return;
+      }
+
+      // Get the first worksheet (usually the main one)
+      const worksheet = currentData.worksheets[0];
+      if (!worksheet.topics || worksheet.topics.length === 0) {
+        alert('No topics found');
+        return;
+      }
+
+      // Get the last topic (newest)
+      const newestTopic = worksheet.topics[worksheet.topics.length - 1];
+      const topicName = newestTopic.name;
+      const topicCount = newestTopic.words.length;
+
+      // Create filtered data with only the newest topic
+      const filteredData = {
+        ...currentData,
+        worksheets: [{
+          ...worksheet,
+          topics: [newestTopic],
+          statistics: {
+            totalTopics: 1,
+            totalWords: topicCount,
+            byFlag: calculateTopicStats([newestTopic])
+          }
+        }]
+      };
+
+      // Render filtered view
+      const container = document.getElementById('dataContainerFilterMode');
+      container.innerHTML = renderSheetData(filteredData);
+
+      // Update filter status
+      isFiltered = true;
+      document.getElementById('filterStatus').innerHTML = `Found topic: <strong>${escapeHtml(topicName)}</strong> (${topicCount} words)`;
+      document.getElementById('filterStatus').className = 'filter-status';
+      document.getElementById('clearFilterBtn').style.display = 'inline-block';
+    }
+
+    // Clear filter and show all data
+    function clearFilter() {
+      if (!currentData) {
+        alert('No data available');
+        return;
+      }
+
+      // Re-render empty state in filter mode
+      const container = document.getElementById('dataContainerFilterMode');
+      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+
+      // Update filter status
+      isFiltered = false;
+      document.getElementById('filterStatus').innerHTML = '';
+      document.getElementById('filterStatus').className = '';
+      document.getElementById('clearFilterBtn').style.display = 'none';
+    }
+
+    // Calculate statistics for a single topic or array of topics
+    function calculateTopicStats(topics) {
+      const stats = {
+        new: 0,
+        known: 0,
+        forgotten: 0,
+        learned: 0
+      };
+
+      topics.forEach(topic => {
+        if (topic.words) {
+          topic.words.forEach(word => {
+            const flag = (word.flag || '').toString().toLowerCase().trim();
+            if (flag === 'n') stats.new++;
+            else if (flag === 'y') stats.known++;
+            else if (flag === '?') stats.forgotten++;
+            else if (flag === 'ok') stats.learned++;
+          });
+        }
+      });
+
+      return stats;
+    }
+
+    // Toggle sort order in All vocab mode (newest → oldest or oldest → newest)
+    function toggleAllVocabSortOrder() {
+      allVocabReverseOrder = !allVocabReverseOrder;
+      
+      // Update button text
+      const btn = document.getElementById('sortOrderBtn');
+      if (allVocabReverseOrder) {
+        btn.textContent = '📊 Oldest → Newest';
+      } else {
+        btn.textContent = '📊 Newest → Oldest';
+      }
+      
+      // Re-render All vocab mode with the new sort order
+      if (currentData) {
+        document.getElementById('dataContainerAllVocab').innerHTML = renderSheetData(currentData, allVocabReverseOrder, false);
+      }
+    }
+
+    // Check authentication status on page load
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/status');
+        const data = await response.json();
+
+        if (!data.authenticated) {
+          // Show warning banner instead of redirecting
+          document.getElementById('authWarning').classList.add('show');
+        } else {
+          // Hide warning if authenticated
+          document.getElementById('authWarning').classList.remove('show');
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        document.getElementById('authWarning').classList.add('show');
+      }
+    }
+
+    // Load current sheet URL and name
+    async function loadSheetUrl() {
+      try {
+        const response = await fetch('/api/sheet/url');
+        const data = await response.json();
+        document.getElementById('sheetUrl').value = data.sheetUrl;
+        document.getElementById('sheetName').value = data.sheetName || '';
+      } catch (err) {
+        console.error('Failed to load sheet URL:', err);
+      }
+    }
+
+    // Update sheet URL and name
+    async function updateSheetUrl() {
+      const sheetUrl = document.getElementById('sheetUrl').value;
+      const sheetName = document.getElementById('sheetName').value;
+
+      if (!sheetUrl) {
+        alert('Please enter a sheet URL');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/sheet/url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sheetUrl, sheetName })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Sheet URL updated successfully');
+          loadSheetData();
+        } else {
+          alert('Failed to update sheet URL');
+        }
+      } catch (err) {
+        console.error('Failed to update sheet URL:', err);
+        alert('Error updating sheet URL');
+      }
+    }
+
+    // Load sheet data
+    async function loadSheetData(forceRefresh = false) {
+      const containerFilter = document.getElementById('dataContainerFilterMode');
+      const containerAll = document.getElementById('dataContainerAllVocab');
+      const cacheInfoDiv = document.getElementById('cacheInfo');
+      const sheetName = document.getElementById('sheetName').value;
+      
+      // Only show loading if forcing refresh or no content yet
+      if (forceRefresh || containerFilter.innerHTML.includes('Loading')) {
+        containerFilter.innerHTML = '<div class="loading">Loading sheet data...</div>';
+        containerAll.innerHTML = '<div class="loading">Loading sheet data...</div>';
+      }
+      cacheInfoDiv.innerHTML = '';
+
+      try {
+        let url = '/api/sheet/data';
+        const params = new URLSearchParams();
+        if (forceRefresh) params.append('refresh', 'true');
+        if (sheetName) params.append('sheetName', sheetName);
+        if (params.toString()) url += '?' + params.toString();
+        
+        const response = await fetch(url);
+
+        if (response.status === 401) {
+          // Show warning instead of redirecting
+          document.getElementById('authWarning').classList.add('show');
+          // Try to continue anyway (might have cached data)
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          if (response.status === 401) {
+            const errorMsg = `<div class="error">${data.error} <a href="/auth.html">Authenticate now</a></div>`;
+            containerFilter.innerHTML = errorMsg;
+            containerAll.innerHTML = errorMsg;
+            document.getElementById('authWarning').classList.add('show');
+          } else {
+            const errorMsg = `<div class="error">Error: ${data.error}</div>`;
+            containerFilter.innerHTML = errorMsg;
+            containerAll.innerHTML = errorMsg;
+          }
+          cacheInfoDiv.innerHTML = '';
+          clearStats();
+        } else {
+          // Show cache info
+          if (data._cached) {
+            const cachedTime = new Date(data._cachedAt).toLocaleString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit', 
+              second: '2-digit',
+              day: 'numeric',
+              month: 'numeric',
+              year: 'numeric'
+            });
+            cacheInfoDiv.innerHTML = `<div class="cache-info">📦 Cached: ${cachedTime}</div>`;
+          } else if (data._fetchedAt) {
+            const fetchedTime = new Date(data._fetchedAt).toLocaleString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              day: 'numeric',
+              month: 'numeric',
+              year: 'numeric'
+            });
+            cacheInfoDiv.innerHTML = `<div class="cache-info fresh">✨ Fresh: ${fetchedTime}</div>`;
+          }
+
+          // Display statistics
+          const totalStats = calculateTotalStats(data);
+          displayStats(totalStats);
+
+          // Store the data globally for filtering
+          currentData = data;
+          
+          // Reset sort order when loading new data
+          allVocabReverseOrder = false;
+          const sortBtn = document.getElementById('sortOrderBtn');
+          if (sortBtn) {
+            sortBtn.textContent = '📊 Newest → Oldest';
+          }
+          
+          // Render to All vocab mode only (Filter mode is empty by default)
+          containerFilter.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+          containerAll.innerHTML = renderSheetData(data, allVocabReverseOrder, false);
+        }
+      } catch (err) {
+        console.error('Failed to load sheet data:', err);
+        const errorMsg = `<div class="error">Error: ${err.message}</div>`;
+        containerFilter.innerHTML = errorMsg;
+        containerAll.innerHTML = errorMsg;
+        clearStats();
+      }
+    }
+
+    // Refresh sheet data (force fetch from OneDrive)
+    function refreshSheetData() {
+      loadSheetData(true);
+    }
+
+    // Render sheet data as tables
+    function renderSheetData(data, reverseOrder = false, showWorksheetStats = true) {
+      let html = '';
+
+      // Render each worksheet
+      if (data.worksheets && data.worksheets.length > 0) {
+        data.worksheets.forEach((worksheet, index) => {
+          html += renderWorksheet(worksheet, index, reverseOrder, showWorksheetStats);
+        });
+      } else {
+        html += '<div class="error">No worksheet data found</div>';
+      }
+
+      return html;
+    }
+
+    // Render a single worksheet with structured topics
+    function renderWorksheet(worksheet, index, reverseOrder = false, showWorksheetStats = true) {
+      let html = `
+        <div class="worksheet">
+      `;
+
+      if (worksheet.error) {
+        html += `<div class="error">Error: ${escapeHtml(worksheet.error)}</div>`;
+      } else if (worksheet.topics && worksheet.topics.length > 0) {
+        // Show statistics if available (only if showWorksheetStats is true)
+        if (worksheet.statistics && showWorksheetStats) {
+          html += renderStatistics(worksheet.statistics);
+        }
+
+        // Render each topic with its words (optionally reversed)
+        let topicsToRender = worksheet.topics;
+        if (reverseOrder) {
+          topicsToRender = [...worksheet.topics].reverse();
+        }
+        topicsToRender.forEach(topic => {
+          html += renderTopic(topic);
+        });
+      } else if (worksheet.values && worksheet.values.length > 0) {
+        // Fallback for raw data (if transformer failed)
+        html += renderRawTable(worksheet);
+      } else {
+        html += '<div class="error">No data in this worksheet</div>';
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    // Render statistics box
+    function renderStatistics(stats) {
+      return `
+        <div class="worksheet-info">
+          <strong>📈 Statistics</strong> 
+          🆕 New: ${stats.byFlag.new} | 
+          ✅ Known: ${stats.byFlag.known} | 
+          ❓ Forgotten: ${stats.byFlag.forgotten} | 
+          👍 Learned: ${stats.byFlag.learned}
+        </div>
+      `;
+    }
+
+    // Render a single topic with its vocabulary words
+    function renderTopic(topic) {
+      let html = `
+        <div style="margin-bottom: 25px;">
+          <div class="worksheet-info" style="background: #e3f2fd; margin-bottom: 10px;">
+            <strong>📚 ${escapeHtml(topic.name)}</strong> (${topic.words.length} words)
+          </div>
+      `;
+
+      // Display topic statistics if available
+      if (topic.statistics) {
+        html += renderStatistics(topic.statistics);
+      }
+
+      html += `
+          <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Flag</th>
+                <th>Word</th>
+                <th>POS</th>
+                <th>Pronunciation</th>
+                <th>Meaning (VI)</th>
+                <th>Example</th>
+                <th>Synonyms</th>
+                <th>Day</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      topic.words.forEach((word, idx) => {
+        const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+        let bgColor = '';
+        
+        if (flagValue === 'n') {
+          bgColor = '#fcdcdf'; // New - pastel pink
+        } else if (flagValue === 'y') {
+          bgColor = '#c6e0b4'; // Known - pastel green
+        } else if (flagValue === 'ok') {
+          bgColor = '#fff2cc'; // Learned - pastel yellow
+        } else if (flagValue === '?') {
+          bgColor = '#ffeb9c'; // Forgotten - pastel yellow
+        }
+        
+        const tdStyle = bgColor ? `background-color: ${bgColor} !important;` : '';
+        html += `
+          <tr>
+            <td style="${tdStyle}">${escapeHtml(word.order || (idx + 1))}</td>
+            <td style="text-align: center;${tdStyle}">${escapeHtml(word.flag || '')}</td>
+            <td style="font-weight: bold;${tdStyle}">${escapeHtml(word.word)}</td>
+            <td style="${tdStyle}"><em>${escapeHtml(word.partOfSpeech)}</em></td>
+            <td style="${tdStyle}">${escapeHtml(word.pronunciation)}</td>
+            <td style="${tdStyle}">${escapeHtml(word.meaning)}</td>
+            <td style="font-style: italic;${tdStyle}">${escapeHtml(word.exampleSentence)}</td>
+            <td style="${tdStyle}">${escapeHtml(word.synonyms)}</td>
+            <td style="${tdStyle}">${escapeHtml(word.dayOfWeek)}</td>
+            <td style="${tdStyle}">${escapeHtml(formatDate(word.date))}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+          </div>
+        </div>
+      `;
+
+      return html;
+    }
+
+    // Render raw table (fallback)
+    function renderRawTable(worksheet) {
+      let html = `
+        <div class="worksheet-info">
+          Range: ${escapeHtml(worksheet.range)} | 
+          Rows: ${worksheet.rowCount} | 
+          Columns: ${worksheet.columnCount}
+        </div>
+        <div class="table-container">
+          <table>
+      `;
+
+      worksheet.values.forEach((row, rowIndex) => {
+        html += '<tr>';
+        row.forEach((cell, cellIndex) => {
+          const tag = rowIndex === 0 ? 'th' : 'td';
+          const value = cell !== null && cell !== undefined ? escapeHtml(String(cell)) : '';
+          html += `<${tag}>${value}</${tag}>`;
+        });
+        html += '</tr>';
+      });
+
+      html += `
+          </table>
+        </div>
+      `;
+
+      return html;
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateValue) {
+      if (!dateValue) return '';
+      
+      let date;
+      
+      // Handle Excel serial date numbers (Excel epoch is 1/1/1900)
+      if (typeof dateValue === 'number') {
+        const excelEpoch = new Date(1900, 0, 1);
+        date = new Date(excelEpoch.getTime() + (dateValue - 1) * 86400000);
+      } else if (typeof dateValue === 'string') {
+        // Remove any extra whitespace
+        const trimmed = dateValue.trim();
+        
+        // Try to parse as ISO or standard date format
+        date = new Date(trimmed);
+        
+        // If parsing failed, try other formats
+        if (isNaN(date.getTime())) {
+          // Try to parse common formats like "2/9/2024" or "02/09/2024"
+          const parts = trimmed.split(/[-\/]/);
+          if (parts.length === 3) {
+            const month = parseInt(parts[0]) - 1; // months are 0-indexed
+            const day = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            date = new Date(year, month, day);
+          }
+        }
+      } else {
+        date = new Date(dateValue);
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return dateValue; // Return original value if can't parse
+      }
+      
+      // Format as m/d/yyyy
+      const month = date.getMonth() + 1; // getMonth() returns 0-11
+      const day = date.getDate();
+      const year = date.getFullYear();
+      
+      return `${month}/${day}/${year}`;
+    }
+
+    // Calculate total statistics across all worksheets
+    function calculateTotalStats(data) {
+      let totalStats = {
+        new: 0,
+        known: 0,
+        forgotten: 0,
+        learned: 0,
+        totalTopics: 0
+      };
+
+      if (data.worksheets && Array.isArray(data.worksheets)) {
+        data.worksheets.forEach(worksheet => {
+          if (worksheet.statistics && worksheet.statistics.byFlag) {
+            totalStats.new += worksheet.statistics.byFlag.new || 0;
+            totalStats.known += worksheet.statistics.byFlag.known || 0;
+            totalStats.forgotten += worksheet.statistics.byFlag.forgotten || 0;
+            totalStats.learned += worksheet.statistics.byFlag.learned || 0;
+          }
+          
+          // Count total topics
+          if (worksheet.topics && Array.isArray(worksheet.topics)) {
+            totalStats.totalTopics += worksheet.topics.length;
+          }
+        });
+      }
+
+      return totalStats;
+    }
+
+    // Display vocabulary statistics
+    function displayStats(stats) {
+      const statsSummary = document.getElementById('statsSummary');
+      if (statsSummary) {
+        document.getElementById('statNew').textContent = stats.new;
+        document.getElementById('statForgotten').textContent = stats.forgotten;
+        document.getElementById('statLearned').textContent = stats.learned;
+        document.getElementById('statKnown').textContent = stats.known;
+        
+        // Calculate and display total words
+        const totalWords = stats.new + stats.known + stats.forgotten + stats.learned;
+        document.getElementById('statTotal').textContent = totalWords;
+        
+        // Display total topics
+        document.getElementById('statTopics').textContent = stats.totalTopics || 0;
+        
+        // Show if there's any data
+        if (totalWords > 0) {
+          statsSummary.style.display = 'grid';
+        } else {
+          statsSummary.style.display = 'none';
+        }
+      }
+    }
+
+    // Clear statistics display
+    function clearStats() {
+      const statsSummary = document.getElementById('statsSummary');
+      if (statsSummary) {
+        statsSummary.style.display = 'none';
+      }
+    }
+
+    // Initialize page - load data immediately
+    async function initPage() {
+      // Load sheet URL and name first
+      await loadSheetUrl();
+      
+      // Load data immediately (will use cache if available)
+      await loadSheetData();
+      
+      // Check authentication in background
+      checkAuth();
+    }
+
+    // Start initialization
+    initPage();
+  </script>
+</body>
+</html>
