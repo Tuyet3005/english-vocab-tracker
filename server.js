@@ -24,7 +24,49 @@ app.use((req, res, next) => {
   res.setHeader('Expires', '0');
   next();
 });
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Custom route to serve index.html with cached data pre-embedded (BEFORE static middleware)
+app.get('/', (req, res) => {
+  try {
+    let htmlContent = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+    
+    // Get cached data to embed
+    const cachedData = loadCache();
+    if (cachedData && cachedData.data) {
+      console.log('Embedding cached data into HTML for instant display');
+      // Embed the cached data as a script tag before the closing head tag
+      const embeddedScript = `
+      <script>
+        window.CACHED_DATA = ${JSON.stringify(cachedData.data)};
+        window.CACHE_TIMESTAMP = "${cachedData.timestamp}";
+        console.log('✅ Embedded cached data loaded successfully');
+        console.log('📊 Data contains', window.CACHED_DATA.worksheets ? window.CACHED_DATA.worksheets.length : 0, 'worksheets');
+      </script>
+      `;
+      htmlContent = htmlContent.replace('</head>', embeddedScript + '</head>');
+    } else {
+      console.log('❌ No cached data available to embed');
+      // Add debug script even without data
+      const debugScript = `
+      <script>
+        console.log('❌ No embedded cached data available');
+      </script>
+      `;
+      htmlContent = htmlContent.replace('</head>', debugScript + '</head>');
+    }
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(htmlContent);
+  } catch (err) {
+    console.error('Error serving index with cached data:', err);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  }
+});
+
+// Serve other static files (excluding index.html which is handled above)
+app.use(express.static(path.join(__dirname, 'public'), {
+  index: false // Don't serve index.html automatically
+}));
 
 // App settings
 const settings = {
@@ -396,19 +438,48 @@ app.get('/api/sheet/data', async (req, res) => {
       console.log('Saved sheet name to state:', sheetName);
     }
 
-    // Always check cache first (even if not authenticated)
-    if (!forceRefresh) {
-      const cachedData = getCachedData(serverState.sheetUrl, sheetName);
+    // Always serve cached data when available, regardless of refresh flag or authentication
+    const cachedData = getCachedData(serverState.sheetUrl, sheetName);
+    if (cachedData && !forceRefresh) {
+      console.log('Returning cached data instantly');
+      return res.json(cachedData);
+    }
+
+    // For refresh requests, require authentication
+    if (forceRefresh && !isAuthenticated()) {
+      // If force refresh but no auth, return cached data with a message if available
       if (cachedData) {
-        console.log('Returning cached data with statistics');
-        return res.json(cachedData);
+        console.log('Returning cached data (refresh requires auth)');
+        return res.json({
+          ...cachedData,
+          _message: 'Authentication required to refresh. Showing cached data.'
+        });
+      }
+      return res.status(401).json({ 
+        error: 'Authentication required to refresh data.',
+        cached: false
+      });
+    }
+
+    // For non-refresh requests without exact cached data, try to get any cached data
+    if (!forceRefresh && !cachedData) {
+      // Try to get any cached data (even with different sheet name)
+      const allCachedData = loadCache();
+      if (allCachedData && allCachedData.data) {
+        console.log('Returning any available cached data instantly');
+        return res.json({
+          ...allCachedData.data,
+          _cached: true,
+          _cachedAt: allCachedData.timestamp,
+          _message: 'Showing available cached data'
+        });
       }
     }
 
-    // For fresh data, require authentication
+    // If we reach here, we need to fetch fresh data and require authentication
     if (!isAuthenticated()) {
       return res.status(401).json({ 
-        error: 'Not authenticated. Please authenticate to fetch fresh data.',
+        error: 'Not authenticated. Please authenticate to fetch data.',
         cached: false
       });
     }

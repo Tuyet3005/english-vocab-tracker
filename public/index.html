@@ -463,7 +463,7 @@
       padding: 15px;
       background: #f8fcff;
       border-radius: 16px;
-      margin: 15px auto;
+      margin: 0;
       max-width: 100%;
       width: 100%;
       box-sizing: border-box;
@@ -473,7 +473,7 @@
         grid-template-columns: 1fr;
         gap: 12px;
         padding: 10px;
-        margin: 10px auto;
+        margin: 0;
         border-radius: 12px;
       }
     }
@@ -481,7 +481,7 @@
       .word-cards-container {
         padding: 8px;
         gap: 10px;
-        margin: 8px auto;
+        margin: 0;
         border-radius: 8px;
       }
     }
@@ -635,7 +635,7 @@
     </div>
 
     <div class="data-section">
-      <div id="statsSummary" class="stats-summary" style="display: none;">
+      <div id="statsSummary" class="stats-summary">
         <div class="stat-item new">
           <div class="stat-label">🆕 New</div>
           <div class="stat-count" id="statNew">0</div>
@@ -671,13 +671,15 @@
           <button onclick="clearFilter()" id="clearFilterBtn" style="display: none; background: #666;">Clear Filter</button>
           <span id="filterStatus"></span>
         </div>
-        <div id="dataContainerFilterMode" class="loading">Loading...</div>
+        <div id="dataContainerFilterMode">
+          <div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>
+        </div>
       </div>
       <div id="allVocabMode" class="tab-content">
         <div class="topic-filter-buttons">
           <button onclick="toggleAllVocabSortOrder()" id="sortOrderBtn">📊 Newest → Oldest</button>
         </div>
-        <div id="dataContainerAllVocab" class="loading">Loading...</div>
+        <div id="dataContainerAllVocab"></div>
       </div>
     </div>
   </div>
@@ -769,9 +771,15 @@
         }]
       };
 
-      // Render filtered view with cards
+      // Render filtered view with cards directly
       const container = document.getElementById('dataContainerFilterMode');
       container.innerHTML = renderSheetDataAsCards(filteredData);
+      // Remove container styling to show cards directly
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.background = 'transparent';
+      container.style.border = 'none';
+      container.style.boxShadow = 'none';
 
       // Update filter status
       isFiltered = true;
@@ -790,6 +798,12 @@
       // Re-render empty state in filter mode
       const container = document.getElementById('dataContainerFilterMode');
       container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+      // Reset container styling
+      container.style.padding = '';
+      container.style.margin = '';
+      container.style.background = '';
+      container.style.border = '';
+      container.style.boxShadow = '';
 
       // Update filter status
       isFiltered = false;
@@ -895,14 +909,8 @@
 
         if (data.success) {
           alert('Sheet URL updated successfully');
-          // When changing URL to a new one, user needs to authenticate to fetch fresh data
-          const isAuth = await checkAuth();
-          if (!isAuth) {
-            showAuthWarning();
-          } else {
-            hideAuthWarning();
-          }
-          loadSheetData(true); // Force refresh with new URL
+          // Load cached data from the new URL (no refresh unless user explicitly clicks refresh)
+          loadSheetData(false);
         } else {
           alert('Failed to update sheet URL');
         }
@@ -919,29 +927,14 @@
       const cacheInfoDiv = document.getElementById('cacheInfo');
       const sheetName = document.getElementById('sheetName').value;
       
-      // Only show loading if forcing refresh or no content yet
-      if (forceRefresh || containerFilter.innerHTML.includes('Loading')) {
-        containerFilter.innerHTML = '<div class="loading">Loading sheet data...</div>';
-        containerAll.innerHTML = '<div class="loading">Loading sheet data...</div>';
+      // Only show loading if forcing refresh (never on page load)
+      if (forceRefresh) {
+        containerFilter.innerHTML = '<div class="loading">Refreshing data...</div>';
+        containerAll.innerHTML = '<div class="loading">Refreshing data...</div>';
+        cacheInfoDiv.innerHTML = '';
       }
-      cacheInfoDiv.innerHTML = '';
-
+      
       try {
-        // If force refresh, check authentication first
-        if (forceRefresh) {
-          const isAuth = await checkAuth();
-          if (!isAuth) {
-            showAuthWarning();
-            const errorMsg = `<div class="error">Authentication required to refresh data. <a href="/auth.html">Authenticate now</a></div>`;
-            containerFilter.innerHTML = errorMsg;
-            containerAll.innerHTML = errorMsg;
-            clearStats();
-            return;
-          } else {
-            hideAuthWarning();
-          }
-        }
-
         let url = '/api/sheet/data';
         const params = new URLSearchParams();
         if (forceRefresh) params.append('refresh', 'true');
@@ -949,77 +942,86 @@
         if (params.toString()) url += '?' + params.toString();
         
         const response = await fetch(url);
-
-        if (response.status === 401) {
-          // Only show warning for auth errors on refresh
-          if (forceRefresh) {
-            showAuthWarning();
-          }
-        }
-
         const data = await response.json();
 
         if (data.error) {
-          if (response.status === 401) {
-            const errorMsg = `<div class="error">${data.error} <a href="/auth.html">Authenticate now</a></div>`;
-            containerFilter.innerHTML = errorMsg;
-            containerAll.innerHTML = errorMsg;
-            showAuthWarning();
-          } else {
-            const errorMsg = `<div class="error">Error: ${data.error}</div>`;
-            containerFilter.innerHTML = errorMsg;
-            containerAll.innerHTML = errorMsg;
+          // Only show errors if refreshing or if we have no current data
+          if (forceRefresh || !currentData) {
+            if (response.status === 401) {
+              const errorMsg = `<div class="error">${data.error} <a href="/auth.html">Authenticate now</a></div>`;
+              containerFilter.innerHTML = errorMsg;
+              containerAll.innerHTML = errorMsg;
+              showAuthWarning();
+            } else {
+              const errorMsg = `<div class="error">Error: ${data.error}</div>`;
+              containerFilter.innerHTML = errorMsg;
+              containerAll.innerHTML = errorMsg;
+            }
+            clearStats();
+            cacheInfoDiv.innerHTML = '';
           }
-          cacheInfoDiv.innerHTML = '';
-          clearStats();
         } else {
-          // Show cache info
-          if (data._cached) {
-            const cachedTime = new Date(data._cachedAt).toLocaleString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit', 
-              second: '2-digit',
-              day: 'numeric',
-              month: 'numeric',
-              year: 'numeric'
-            });
-            cacheInfoDiv.innerHTML = `<div class="cache-info">📦 Cached: ${cachedTime}</div>`;
-          } else if (data._fetchedAt) {
-            const fetchedTime = new Date(data._fetchedAt).toLocaleString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              day: 'numeric',
-              month: 'numeric',
-              year: 'numeric'
-            });
-            cacheInfoDiv.innerHTML = `<div class="cache-info fresh">✨ Fresh: ${fetchedTime}</div>`;
+          // Always hide auth warning if we got data
+          hideAuthWarning();
+          
+          // Update cache info (only if refreshing or no data was displayed yet)
+          if (forceRefresh || !currentData) {
+            if (data._message) {
+              cacheInfoDiv.innerHTML = `<div class="cache-info">${escapeHtml(data._message)}</div>`;
+            } else if (data._cached) {
+              const cachedTime = new Date(data._cachedAt).toLocaleString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit', 
+                second: '2-digit',
+                day: 'numeric',
+                month: 'numeric',
+                year: 'numeric'
+              });
+              cacheInfoDiv.innerHTML = `<div class="cache-info">📦 Cached: ${cachedTime}</div>`;
+            } else if (data._fetchedAt) {
+              const fetchedTime = new Date(data._fetchedAt).toLocaleString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                day: 'numeric',
+                month: 'numeric',
+                year: 'numeric'
+              });
+              cacheInfoDiv.innerHTML = `<div class="cache-info fresh">✨ Fresh: ${fetchedTime}</div>`;
+            }
           }
 
-          // Display statistics
+          // Always display statistics and data when available
           const totalStats = calculateTotalStats(data);
           displayStats(totalStats);
 
           // Store the data globally for filtering
           currentData = data;
           
-          // Reset sort order when loading new data
-          allVocabReverseOrder = false;
-          const sortBtn = document.getElementById('sortOrderBtn');
-          if (sortBtn) {
-            sortBtn.textContent = '📊 Newest → Oldest';
+          // Reset sort order when loading new data (only if forcing refresh)
+          if (forceRefresh) {
+            allVocabReverseOrder = false;
+            const sortBtn = document.getElementById('sortOrderBtn');
+            if (sortBtn) {
+              sortBtn.textContent = '📊 Newest → Oldest';
+            }
           }
           
-          // Render to All vocab mode only (Filter mode is empty by default)
-          containerFilter.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+          // Render data
+          if (forceRefresh) {
+            containerFilter.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+          }
           containerAll.innerHTML = renderSheetData(data, allVocabReverseOrder, false);
         }
       } catch (err) {
         console.error('Failed to load sheet data:', err);
-        const errorMsg = `<div class="error">Error: ${err.message}</div>`;
-        containerFilter.innerHTML = errorMsg;
-        containerAll.innerHTML = errorMsg;
-        clearStats();
+        // Only show error message if refreshing or no current data
+        if (forceRefresh || !currentData) {
+          const errorMsg = `<div class="error">Error: ${err.message}</div>`;
+          containerFilter.innerHTML = errorMsg;
+          containerAll.innerHTML = errorMsg;
+          clearStats();
+        }
       }
     }
 
@@ -1362,26 +1364,26 @@
 
     // Display vocabulary statistics
     function displayStats(stats) {
+      console.log('📊 Displaying stats:', stats);
       const statsSummary = document.getElementById('statsSummary');
       if (statsSummary) {
-        document.getElementById('statNew').textContent = stats.new;
-        document.getElementById('statForgotten').textContent = stats.forgotten;
-        document.getElementById('statLearned').textContent = stats.learned;
-        document.getElementById('statKnown').textContent = stats.known;
+        document.getElementById('statNew').textContent = stats.new || 0;
+        document.getElementById('statForgotten').textContent = stats.forgotten || 0;
+        document.getElementById('statLearned').textContent = stats.learned || 0;
+        document.getElementById('statKnown').textContent = stats.known || 0;
         
         // Calculate and display total words
-        const totalWords = stats.new + stats.known + stats.forgotten + stats.learned;
+        const totalWords = (stats.new || 0) + (stats.known || 0) + (stats.forgotten || 0) + (stats.learned || 0);
         document.getElementById('statTotal').textContent = totalWords;
         
         // Display total topics
         document.getElementById('statTopics').textContent = stats.totalTopics || 0;
         
-        // Show if there's any data
-        if (totalWords > 0) {
-          statsSummary.style.display = 'grid';
-        } else {
-          statsSummary.style.display = 'none';
-        }
+        // Always show the statistics container
+        statsSummary.style.display = 'grid';
+        console.log('✅ Statistics displayed and container shown');
+      } else {
+        console.error('❌ statsSummary element not found');
       }
     }
 
@@ -1393,17 +1395,87 @@
       }
     }
 
-    // Initialize page - load data immediately
-    async function initPage() {
-      // Load sheet URL and name first
-      await loadSheetUrl();
+    // Initialize page - display cached data immediately if available
+    function initPage() {
+      console.log('Initializing page...');
       
-      // Load data immediately (will use cache if available)
-      // No authentication required for cached data
-      await loadSheetData();
+      // Show statistics container immediately
+      const statsSummary = document.getElementById('statsSummary');
+      if (statsSummary) {
+        statsSummary.style.display = 'grid';
+      }
+      
+      // Check if we have embedded cached data and display it immediately
+      if (window.CACHED_DATA) {
+        console.log('Displaying embedded cached data immediately');
+        displayDataInstantly(window.CACHED_DATA, window.CACHE_TIMESTAMP);
+      } else {
+        console.log('No embedded data, loading from API cache immediately');
+        // Load from API cache immediately without showing loading
+        loadSheetDataSilent();
+      }
+      
+      // Load sheet URL and name in background (async)
+      setTimeout(() => {
+        loadSheetUrl();
+      }, 0);
     }
 
-    // Start initialization
+    // Display data instantly without any loading states
+    function displayDataInstantly(data, timestamp) {
+      console.log('🚀 Displaying data instantly...', data);
+      
+      // Display statistics immediately
+      const totalStats = calculateTotalStats(data);
+      console.log('📊 Calculated stats:', totalStats);
+      displayStats(totalStats);
+      
+      // Store data globally
+      currentData = data;
+      
+      // Display cache info
+      if (timestamp) {
+        const cachedTime = new Date(timestamp).toLocaleString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit', 
+          second: '2-digit',
+          day: 'numeric',
+          month: 'numeric',
+          year: 'numeric'
+        });
+        const cacheInfoDiv = document.getElementById('cacheInfo');
+        if (cacheInfoDiv) {
+          cacheInfoDiv.innerHTML = `<div class="cache-info">📦 Cached: ${cachedTime}</div>`;
+        }
+      }
+      
+      // Render data immediately
+      const containerAll = document.getElementById('dataContainerAllVocab');
+      if (containerAll) {
+        const renderedData = renderSheetData(data, false, false);
+        console.log('📝 Rendered HTML length:', renderedData.length);
+        containerAll.innerHTML = renderedData;
+      }
+      
+      console.log('✅ Data display completed instantly');
+    }
+
+    // Load data silently without showing any loading states
+    function loadSheetDataSilent() {
+      fetch('/api/sheet/data')
+        .then(response => response.json())
+        .then(data => {
+          if (!data.error) {
+            console.log('Loaded cached data from API silently');
+            displayDataInstantly(data, data._cachedAt || data._fetchedAt);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to load cached data silently:', err);
+        });
+    }
+
+    // Start initialization immediately (synchronously)
     initPage();
   </script>
 </body>
