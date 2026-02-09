@@ -22,3 +22,10 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+.vercel
+.env*.local
+
+server-state.json
+node_modules
+sheet-data-cache.json
+sheet-stats-cache.json
