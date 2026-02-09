@@ -6,7 +6,7 @@ const graphHelper = require('./lib/graphHelper');
 const dataTransformer = require('./lib/dataTransformer');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // IMPORTANT: This file stores sensitive authentication tokens and credentials.
 // NEVER expose this data to the frontend. Only send non-sensitive data like sheet URL.
