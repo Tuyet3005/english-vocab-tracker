@@ -668,11 +668,13 @@
       <div id="filterMode" class="tab-content active">
         <div class="topic-filter-buttons">
           <button onclick="filterByNewestTopic()">📍 Newest Topic</button>
+          <button onclick="filterRandomNewWords()">🎲 10 Random New Words</button>
+          <button onclick="startGameMode()">🎮 Play Game</button>
           <button onclick="clearFilter()" id="clearFilterBtn" style="display: none; background: #666;">Clear Filter</button>
           <span id="filterStatus"></span>
         </div>
         <div id="dataContainerFilterMode">
-          <div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>
+          <div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>
         </div>
       </div>
       <div id="allVocabMode" class="tab-content">
@@ -736,7 +738,192 @@
     // Store the full data globally for filtering
     let currentData = null;
     let isFiltered = false;
+    let gameMode = false;
+    let gameWords = [];
+    let currentWordIndex = 0;
     let allVocabReverseOrder = false;
+
+    // Start game mode - show one flashcard at a time with navigation
+    function startGameMode() {
+      if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
+        alert('No data to play with');
+        return;
+      }
+
+      // Collect all words with 'n' or '?' flag from all worksheets and topics
+      gameWords = [];
+      currentData.worksheets.forEach(worksheet => {
+        if (worksheet.topics && worksheet.topics.length > 0) {
+          worksheet.topics.forEach(topic => {
+            if (topic.words && topic.words.length > 0) {
+              topic.words.forEach(word => {
+                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                if (flagValue === 'n' || flagValue === '?') {
+                  gameWords.push({
+                    ...word,
+                    topicName: topic.name,
+                    worksheetName: worksheet.name
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (gameWords.length === 0) {
+        alert('No words with "n" or "?" flags found for the game');
+        return;
+      }
+
+      // Shuffle words for random order
+      gameWords = gameWords.sort(() => 0.5 - Math.random());
+      currentWordIndex = 0;
+      gameMode = true;
+
+      // Show first word
+      showGameWord();
+
+      // Update filter status
+      isFiltered = true;
+      document.getElementById('filterStatus').innerHTML = `Game Mode: <strong>${gameWords.length} words</strong> to practice`;
+      document.getElementById('filterStatus').className = 'filter-status';
+      document.getElementById('clearFilterBtn').style.display = 'inline-block';
+    }
+
+    function showGameWord() {
+      if (!gameMode || gameWords.length === 0) return;
+
+      const word = gameWords[currentWordIndex];
+      const container = document.getElementById('dataContainerFilterMode');
+      
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin: 0 auto;">
+          <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 40px;">
+            <button onclick="previousGameWord()" 
+                    style="background: #acd6ff; color: #1a5490; border: none; padding: 12px 24px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; ${currentWordIndex === 0 ? 'opacity: 0.4; cursor: not-allowed;' : ''}"
+                    ${currentWordIndex === 0 ? 'disabled' : ''}>
+              ⬅️ Previous Word
+            </button>
+            <span style="font-weight: bold; background: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 8px; font-size: 14px;">
+              Word ${currentWordIndex + 1} of ${gameWords.length}
+            </span>
+            <button onclick="nextGameWord()" 
+                    style="background: #e1fcea; color: #2a511d; border: none; padding: 12px 24px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; ${currentWordIndex === gameWords.length - 1 ? 'opacity: 0.4; cursor: not-allowed;' : ''}"
+                    ${currentWordIndex === gameWords.length - 1 ? 'disabled' : ''}>
+              Next Word ➡️
+            </button>
+          </div>
+          
+          <div style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
+            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 500px; width: 100%;">
+              <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="margin: 0 0 8px 0; color: #374151; font-size: 18px;">${word.topicName || 'Topic'}</h3>
+                <span style="color: #6b7280; font-size: 14px;">${word.worksheetName || 'Worksheet'}</span>
+                ${word.flag ? `<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">${word.flag}</span>` : ''}
+              </div>
+              <div style="text-align: center; margin-bottom: 16px;">
+                <div style="font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">
+                  ${word.english || 'N/A'}
+                </div>
+                <div style="font-size: 20px; color: #4b5563;">
+                  ${word.vietnamese || 'N/A'}
+                </div>
+              </div>
+              ${word.example ? `<div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #3b82f6;"><strong style="color: #1f2937;">Example:</strong> <span style="color: #4b5563;">${word.example}</span></div>` : ''}
+              ${word.note ? `<div style="background: #fef7ff; padding: 12px; border-radius: 8px; border-left: 4px solid #a855f7;"><strong style="color: #1f2937;">Note:</strong> <span style="color: #4b5563;">${word.note}</span></div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Remove container styling to show cards directly
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.background = 'transparent';
+      container.style.border = 'none';
+      container.style.boxShadow = 'none';
+    }
+
+    function previousGameWord() {
+      if (!gameMode || currentWordIndex <= 0) return;
+      currentWordIndex--;
+      showGameWord();
+    }
+
+    function nextGameWord() {
+      if (!gameMode || currentWordIndex >= gameWords.length - 1) return;
+      currentWordIndex++;
+      showGameWord();
+    }
+
+    // Filter to show 10 random words with 'n' flag
+    function filterRandomNewWords() {
+      if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
+        alert('No data to filter');
+        return;
+      }
+
+      // Collect all words with 'n' flag from all worksheets and topics
+      let allNewWords = [];
+      currentData.worksheets.forEach(worksheet => {
+        if (worksheet.topics && worksheet.topics.length > 0) {
+          worksheet.topics.forEach(topic => {
+            if (topic.words && topic.words.length > 0) {
+              topic.words.forEach(word => {
+                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                if (flagValue === 'n' || flagValue === '?') {
+                  allNewWords.push({
+                    ...word,
+                    topicName: topic.name,
+                    worksheetName: worksheet.name
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (allNewWords.length === 0) {
+        alert('No new words (flag "n") found in the data');
+        return;
+      }
+
+      // Shuffle and select up to 10 random words
+      const shuffled = allNewWords.sort(() => 0.5 - Math.random());
+      const selectedWords = shuffled.slice(0, Math.min(10, allNewWords.length));
+
+      // Create a mock topic structure for rendering
+      const randomTopic = {
+        name: `Random ${selectedWords.length} New Words`,
+        words: selectedWords
+      };
+
+      // Create filtered data structure
+      const filteredData = {
+        worksheets: [{
+          name: 'Random Selection',
+          topics: [randomTopic]
+        }]
+      };
+
+      // Render filtered view with cards directly
+      const container = document.getElementById('dataContainerFilterMode');
+      container.innerHTML = renderSheetDataAsCards(filteredData);
+      // Remove container styling to show cards directly
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.background = 'transparent';
+      container.style.border = 'none';
+      container.style.boxShadow = 'none';
+
+      // Update filter status
+      isFiltered = true;
+      document.getElementById('filterStatus').innerHTML = `Found <strong>${selectedWords.length} random new words</strong>`;
+      document.getElementById('filterStatus').className = 'filter-status';
+      document.getElementById('clearFilterBtn').style.display = 'inline-block';
+    }
 
     // Filter to show only the newest topic
     function filterByNewestTopic() {
@@ -797,7 +984,7 @@
 
       // Re-render empty state in filter mode
       const container = document.getElementById('dataContainerFilterMode');
-      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
+      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>';
       // Reset container styling
       container.style.padding = '';
       container.style.margin = '';
@@ -807,6 +994,9 @@
 
       // Update filter status
       isFiltered = false;
+      gameMode = false;
+      gameWords = [];
+      currentWordIndex = 0;
       document.getElementById('filterStatus').innerHTML = '';
       document.getElementById('filterStatus').className = '';
       document.getElementById('clearFilterBtn').style.display = 'none';
