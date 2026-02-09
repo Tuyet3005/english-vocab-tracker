@@ -1,16 +1,26 @@
+// Load environment variables from .env.local if it exists
+require('dotenv').config({ path: '.env.local' });
+
 // Express server for Vocab Tracker
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { get, put, list } = require('@tigrisdata/storage');
 const graphHelper = require('./lib/graphHelper');
 const dataTransformer = require('./lib/dataTransformer');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// IMPORTANT: This file stores sensitive authentication tokens and credentials.
-// NEVER expose this data to the frontend. Only send non-sensitive data like sheet URL.
+// File keys for Tigris storage
+const STATE_KEY = 'server-state.json';
+const CACHE_KEY = 'sheet-data-cache.json';
+const STATS_CACHE_KEY = 'sheet-stats-cache.json';
+
+// IMPORTANT: This data is now stored in TigrisData cloud storage.
+// NEVER expose authentication tokens and credentials to the frontend.
 // The tokens, clientSecret, and authentication state must remain server-side only.
+// Local file paths (kept for backward compatibility in some functions)
 const STATE_FILE = path.join(__dirname, 'server-state.json');
 const CACHE_FILE = path.join(__dirname, 'sheet-data-cache.json');
 const STATS_CACHE_FILE = path.join(__dirname, 'sheet-stats-cache.json');
@@ -26,12 +36,12 @@ app.use((req, res, next) => {
 });
 
 // Custom route to serve index.html with cached data pre-embedded (BEFORE static middleware)
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
   try {
     let htmlContent = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
     
     // Get cached data to embed
-    const cachedData = loadCache();
+    const cachedData = await loadCache();
     if (cachedData && cachedData.data) {
       console.log('Embedding cached data into HTML for instant display');
       // Embed the cached data as a script tag before the closing head tag
@@ -76,14 +86,17 @@ const settings = {
   graphUserScopes: ['user.read', 'files.read']
 };
 
-// Load or initialize server state
-function loadState() {
+// Load or initialize server state from Tigris
+async function loadState() {
   try {
-    if (fs.existsSync(STATE_FILE)) {
-      return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    }
+    const data = await get(STATE_KEY, 'string');
+    return JSON.parse(data);
   } catch (err) {
-    console.error('Error loading state:', err.message);
+    if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
+      console.log('No state found in Tigris storage, using default state');
+    } else {
+      console.error('Error loading state from Tigris:', err.message);
+    }
   }
 
   return {
@@ -97,29 +110,55 @@ function loadState() {
   };
 }
 
-function saveState(state) {
+async function saveState(state) {
   try {
-    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+    await put(STATE_KEY, JSON.stringify(state, null, 2));
+    console.log('State saved to Tigris storage');
   } catch (err) {
-    console.error('Error saving state:', err.message);
+    console.error('Error saving state to Tigris:', err.message);
   }
 }
 
-let serverState = loadState();
+// Initialize server state (will be loaded asynchronously)
+let serverState = {
+  sheetUrl: 'https://studenthcmusedu-my.sharepoint.com/:x:/g/personal/20120422_student_hcmus_edu_vn/IQAB2D7k19hCSZ1YTQzM7xzuAbC5ZP5VTOe0khG8r7N9o_c?e=HvJTg2',
+  sheetName: '',
+  token: null,
+  expiresOn: null,
+  deviceCode: null,
+  userCode: null,
+  verificationUri: null
+};
 
-// Cache management
-function loadCache() {
+// Load state from TigrisData on server start
+(async () => {
   try {
-    if (fs.existsSync(CACHE_FILE)) {
-      return JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
+    const loadedState = await loadState();
+    if (loadedState) {
+      serverState = loadedState;
+      console.log('Server state loaded from TigrisData storage');
     }
+  } catch (error) {
+    console.error('Failed to load server state:', error.message);
+  }
+})();
+
+// Cache management with Tigris
+async function loadCache() {
+  try {
+    const data = await get(CACHE_KEY, 'string');
+    return JSON.parse(data);
   } catch (err) {
-    console.error('Error loading cache:', err.message);
+    if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
+      console.log('No cache found in Tigris storage');
+    } else {
+      console.error('Error loading cache from Tigris:', err.message);
+    }
   }
   return null;
 }
 
-function saveCache(sheetUrl, data, sheetName = '') {
+async function saveCache(sheetUrl, data, sheetName = '') {
   try {
     const cacheData = {
       sheetUrl,
@@ -127,15 +166,15 @@ function saveCache(sheetUrl, data, sheetName = '') {
       data,
       timestamp: new Date().toISOString()
     };
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(cacheData, null, 2));
-    console.log('Cache saved for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '');
+    await put(CACHE_KEY, JSON.stringify(cacheData, null, 2));
+    console.log('Cache saved to Tigris for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '');
   } catch (err) {
-    console.error('Error saving cache:', err.message);
+    console.error('Error saving cache to Tigris:', err.message);
   }
 }
 
-function getCachedData(sheetUrl, sheetName = '') {
-  const cache = loadCache();
+async function getCachedData(sheetUrl, sheetName = '') {
+  const cache = await loadCache();
   if (cache && cache.sheetUrl === sheetUrl && cache.sheetName === sheetName) {
     console.log('Using cached data from:', cache.timestamp);
     return {
@@ -147,19 +186,22 @@ function getCachedData(sheetUrl, sheetName = '') {
   return null;
 }
 
-// Statistics cache management
-function loadStatsCache() {
+// Statistics cache management with Tigris
+async function loadStatsCache() {
   try {
-    if (fs.existsSync(STATS_CACHE_FILE)) {
-      return JSON.parse(fs.readFileSync(STATS_CACHE_FILE, 'utf8'));
-    }
+    const data = await get(STATS_CACHE_KEY, 'string');
+    return JSON.parse(data);
   } catch (err) {
-    console.error('Error loading stats cache:', err.message);
+    if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
+      console.log('No stats cache found in Tigris storage');
+    } else {
+      console.error('Error loading stats cache from Tigris:', err.message);
+    }
   }
   return null;
 }
 
-function saveStatsCache(sheetUrl, data, sheetName = '') {
+async function saveStatsCache(sheetUrl, data, sheetName = '') {
   try {
     // Extract statistics from worksheets and topics
     const worksheetStats = [];
@@ -188,10 +230,10 @@ function saveStatsCache(sheetUrl, data, sheetName = '') {
       worksheetStats,
       timestamp: new Date().toISOString()
     };
-    fs.writeFileSync(STATS_CACHE_FILE, JSON.stringify(statsCache, null, 2));
-    console.log('Statistics cache saved for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '');
+    await put(STATS_CACHE_KEY, JSON.stringify(statsCache, null, 2));
+    console.log('Statistics cache saved to Tigris for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '');
   } catch (err) {
-    console.error('Error saving stats cache:', err.message);
+    console.error('Error saving stats cache to Tigris:', err.message);
   }
 }
 
@@ -251,7 +293,7 @@ async function refreshAuthToken() {
     if (cachedToken && cachedToken.token && cachedToken.token !== serverState.token) {
       serverState.token = cachedToken.token;
       serverState.expiresOn = cachedToken.expiresOn;
-      saveState(serverState);
+      await saveState(serverState);
       console.log('Token refreshed successfully. New expiry:', new Date(cachedToken.expiresOn).toLocaleString());
       return true;
     }
@@ -407,7 +449,7 @@ app.get('/api/sheet/url', (req, res) => {
 });
 
 // Update sheet URL
-app.post('/api/sheet/url', (req, res) => {
+app.post('/api/sheet/url', async (req, res) => {
   const { sheetUrl, sheetName } = req.body;
 
   if (!sheetUrl) {
@@ -416,7 +458,7 @@ app.post('/api/sheet/url', (req, res) => {
 
   serverState.sheetUrl = sheetUrl;
   serverState.sheetName = sheetName || '';
-  saveState(serverState);
+  await saveState(serverState);
 
   res.json({ 
     success: true, 
@@ -434,12 +476,12 @@ app.get('/api/sheet/data', async (req, res) => {
     // Save the sheet name to state if it's different
     if (sheetName !== serverState.sheetName) {
       serverState.sheetName = sheetName;
-      saveState(serverState);
+      await saveState(serverState);
       console.log('Saved sheet name to state:', sheetName);
     }
 
     // Always serve cached data when available, regardless of refresh flag or authentication
-    const cachedData = getCachedData(serverState.sheetUrl, sheetName);
+    const cachedData = await getCachedData(serverState.sheetUrl, sheetName);
     if (cachedData && !forceRefresh) {
       console.log('Returning cached data instantly');
       return res.json(cachedData);
@@ -509,10 +551,10 @@ app.get('/api/sheet/data', async (req, res) => {
     const structuredData = dataTransformer.transformVocabData(filteredData);
     
     // Save to cache (includes both data and statistics)
-    saveCache(serverState.sheetUrl, structuredData, sheetName);
+    await saveCache(serverState.sheetUrl, structuredData, sheetName);
     
     // Also save statistics separately for faster access on subsequent requests
-    saveStatsCache(serverState.sheetUrl, structuredData, sheetName);
+    await saveStatsCache(serverState.sheetUrl, structuredData, sheetName);
     console.log('Data and statistics cached successfully');
     
     res.json({
