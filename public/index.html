@@ -447,6 +447,56 @@
       font-size: 14px;
       animation: pulse 1.5s ease-in-out infinite;
     }
+    .newest-topics-container {
+      margin-top: 20px;
+    }
+    .topic-section {
+      margin-bottom: 30px;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .topic-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 15px 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .topic-title {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topic-number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      min-width: 30px;
+      text-align: center;
+    }
+    .topic-name {
+      flex: 1;
+      font-weight: 600;
+    }
+    .topic-word-count {
+      color: #666;
+      font-size: 14px;
+      font-weight: normal;
+      background: #fff;
+      padding: 4px 12px;
+      border-radius: 15px;
+      border: 1px solid #ddd;
+    }
+    .topic-content {
+      padding: 20px;
+      background: white;
+    }
     @keyframes pulse {
       0%, 100% {
         opacity: 1;
@@ -494,6 +544,21 @@
       position: relative;
       overflow: hidden;
       border: 2px solid transparent;
+    }
+    .card-number {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 20px;
+      text-align: center;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .word-card:hover {
       transform: translateY(-8px) scale(1.02);
@@ -668,13 +733,15 @@
       <div id="filterMode" class="tab-content active">
         <div class="topic-filter-buttons">
           <button onclick="filterByNewestTopic()">📍 Newest Topic</button>
+          <button onclick="filterBy5NewestTopics()">📚 5 Newest Topics</button>
+          <button onclick="filter30NewestWords()">⭐ 30 Newest Words</button>
           <button onclick="filterRandomNewWords()">🎲 10 Random New Words</button>
           <button onclick="startGameMode()">🎮 Play Game</button>
           <button onclick="clearFilter()" id="clearFilterBtn" style="display: none; background: #666;">Clear Filter</button>
           <span id="filterStatus"></span>
         </div>
         <div id="dataContainerFilterMode">
-          <div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>
+          <div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "📚 5 Newest Topics", "⭐ 30 Newest Words", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>
         </div>
       </div>
       <div id="allVocabMode" class="tab-content">
@@ -857,6 +924,72 @@
       showGameWord();
     }
 
+    // Filter to show 30 newest words (by order in data)
+    function filter30NewestWords() {
+      if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
+        alert('No data to filter');
+        return;
+      }
+
+      // Collect all words from all worksheets and topics in order
+      let allWords = [];
+      currentData.worksheets.forEach(worksheet => {
+        if (worksheet.topics && worksheet.topics.length > 0) {
+          worksheet.topics.forEach(topic => {
+            if (topic.words && topic.words.length > 0) {
+              topic.words.forEach((word, wordIndex) => {
+                allWords.push({
+                  ...word,
+                  topicName: topic.name,
+                  worksheetName: worksheet.name,
+                  originalIndex: wordIndex
+                });
+              });
+            }
+          });
+        }
+      });
+
+      if (allWords.length === 0) {
+        alert('No words found in the data');
+        return;
+      }
+
+      // Get the last 30 words (newest by order)
+      const wordCount = Math.min(30, allWords.length);
+      const newestWords = allWords.slice(-wordCount);
+
+      // Create a mock topic structure for rendering
+      const newestWordsTopic = {
+        name: `${wordCount} Newest Words`,
+        words: newestWords
+      };
+
+      // Create filtered data structure
+      const filteredData = {
+        worksheets: [{
+          name: 'Newest Words Selection',
+          topics: [newestWordsTopic]
+        }]
+      };
+
+      // Render filtered view with cards directly
+      const container = document.getElementById('dataContainerFilterMode');
+      container.innerHTML = renderSheetDataAsCards(filteredData);
+      // Remove container styling to show cards directly
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.background = 'transparent';
+      container.style.border = 'none';
+      container.style.boxShadow = 'none';
+
+      // Update filter status
+      isFiltered = true;
+      document.getElementById('filterStatus').innerHTML = `Found <strong>${wordCount} newest words</strong> from all topics`;
+      document.getElementById('filterStatus').className = 'filter-status';
+      document.getElementById('clearFilterBtn').style.display = 'inline-block';
+    }
+
     // Filter to show 10 random words with 'n' flag
     function filterRandomNewWords() {
       if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
@@ -975,6 +1108,76 @@
       document.getElementById('clearFilterBtn').style.display = 'inline-block';
     }
 
+    // Filter to show the 5 newest topics
+    function filterBy5NewestTopics() {
+      if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
+        alert('No data to filter');
+        return;
+      }
+
+      // Get the first worksheet (usually the main one)
+      const worksheet = currentData.worksheets[0];
+      if (!worksheet.topics || worksheet.topics.length === 0) {
+        alert('No topics found');
+        return;
+      }
+
+      // Get the last 5 topics (or all if less than 5)
+      const topicCount = Math.min(5, worksheet.topics.length);
+      let newestTopics = worksheet.topics.slice(-topicCount);
+      
+      // Sort topics by name for better organization
+      newestTopics = newestTopics.sort((a, b) => {
+        return a.name.localeCompare(b.name, 'vi', { numeric: true, sensitivity: 'base' });
+      });
+      
+      const totalWords = newestTopics.reduce((sum, topic) => sum + (topic.words ? topic.words.length : 0), 0);
+
+      // Render filtered view with organized topics
+      const container = document.getElementById('dataContainerFilterMode');
+      container.innerHTML = render5NewestTopicsWithHeaders(newestTopics);
+      // Remove container styling to show cards directly
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.background = 'transparent';
+      container.style.border = 'none';
+      container.style.boxShadow = 'none';
+
+      // Update filter status
+      isFiltered = true;
+      const topicNames = newestTopics.map(topic => topic.name).join(', ');
+      document.getElementById('filterStatus').innerHTML = `Found <strong>${topicCount} newest topics</strong> (${totalWords} words): ${escapeHtml(topicNames)}`;
+      document.getElementById('filterStatus').className = 'filter-status';
+      document.getElementById('clearFilterBtn').style.display = 'inline-block';
+    }
+
+    // Render 5 newest topics with clear headers and organized layout
+    function render5NewestTopicsWithHeaders(topics) {
+      let html = '<div class="newest-topics-container">';
+      
+      topics.forEach((topic, index) => {
+        const wordCount = topic.words ? topic.words.length : 0;
+        
+        html += `
+          <div class="topic-section">
+            <div class="topic-header">
+              <h3 class="topic-title">
+                <span class="topic-number">${index + 1}.</span>
+                <span class="topic-name">${escapeHtml(topic.name)}</span>
+                <span class="topic-word-count">(${wordCount} words)</span>
+              </h3>
+            </div>
+            <div class="topic-content">
+              ${renderTopicAsCards(topic)}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      return html;
+    }
+
     // Clear filter and show all data
     function clearFilter() {
       if (!currentData) {
@@ -984,7 +1187,7 @@
 
       // Re-render empty state in filter mode
       const container = document.getElementById('dataContainerFilterMode');
-      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>';
+      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "📚 5 Newest Topics", "⭐ 30 Newest Words", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>';
       // Reset container styling
       container.style.padding = '';
       container.style.margin = '';
@@ -1391,7 +1594,12 @@
     function renderTopicAsCards(topic) {
       let html = `<div class="word-cards-container">`;
 
-      topic.words.forEach((word, idx) => {
+      // Sort words alphabetically for better organization
+      const sortedWords = topic.words ? [...topic.words].sort((a, b) => {
+        return a.word.localeCompare(b.word, 'en', { sensitivity: 'base' });
+      }) : [];
+
+      sortedWords.forEach((word, idx) => {
         const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
         let flagClass = '';
         let flagText = '';
@@ -1415,6 +1623,7 @@
 
         html += `
           <div class="word-card flag-${flagClass}">
+            <div class="card-number">${idx + 1}</div>
             ${flagText ? `<div class="card-flag ${flagClass}">${escapeHtml(flagText)}</div>` : ''}
             <div class="word-main">
               <div class="word-english">${escapeHtml(word.word)}</div>
