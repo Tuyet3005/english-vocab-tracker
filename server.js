@@ -459,3 +459,4 @@ app.listen(PORT, () => {
   console.log(`Vocab Tracker server running at http://localhost:${PORT}`);
   console.log(`Authenticated: ${isAuthenticated()}`);
 });
+module.exports = app
