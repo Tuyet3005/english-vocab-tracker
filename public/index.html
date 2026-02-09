@@ -135,16 +135,16 @@
       background: linear-gradient(135deg, #fff5f9 0%, #f5f8fc 100%);
       border: none;
       border-radius: 16px;
-      padding: 28px;
-      margin-bottom: 20px;
+      padding: 8px 10px;
+      margin-bottom: 15px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+      gap: 20px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
     .stat-item {
       text-align: center;
-      padding: 20px 16px;
+      padding: 5px 3px;
       background: white;
       border-radius: 12px;
       border: none;
@@ -158,14 +158,14 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
     .stat-item .stat-label {
-      font-size: 13px;
+      font-size: 12px;
       color: #666;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       letter-spacing: 0.5px;
     }
     .stat-item .stat-count {
-      font-size: 36px;
+      font-size: 32px;
       font-weight: 700;
       color: #2e7d32;
     }
@@ -455,6 +455,144 @@
         opacity: 0.7;
       }
     }
+    /* Word Cards Styles */
+    .word-cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      background: #f8fcff;
+      border-radius: 16px;
+      margin: 20px 0;
+    }
+    .word-card {
+      background: linear-gradient(145deg, #ffffff 0%, #f9fdff 100%);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      border: 2px solid transparent;
+    }
+    .word-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      border-color: rgba(255, 119, 177, 0.3);
+    }
+    .word-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ff77b1, #667eea, #764ba2);
+      border-radius: 16px 16px 0 0;
+    }
+    .word-card.flag-new::before {
+      background: linear-gradient(90deg, #ff77b1, #ff5a95);
+    }
+    .word-card.flag-known::before {
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+    }
+    .word-card.flag-learned::before {
+      background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+    .word-card.flag-forgotten::before {
+      background: linear-gradient(90deg, #f97316, #ea580c);
+    }
+    .word-main {
+      margin-bottom: 15px;
+    }
+    .word-english {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .word-pronunciation {
+      font-size: 16px;
+      color: #667eea;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .word-pos {
+      display: inline-block;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      color: #4338ca;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 15px;
+    }
+    .word-meaning {
+      font-size: 15px;
+      color: #475569;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+    .word-synonyms {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+    .synonyms-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #16a34a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .synonyms-text {
+      font-size: 14px;
+      color: #22c55e;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .word-example {
+      font-style: italic;
+      font-size: 14px;
+      color: #64748b;
+      padding: 10px 0;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 12px;
+    }
+    .card-flag {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .card-flag.new {
+      background: linear-gradient(135deg, #ff77b1, #ff5a95);
+    }
+    .card-flag.known {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+    }
+    .card-flag.learned {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    }
+    .card-flag.forgotten {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+    }
   </style>
 </head>
 <body>
@@ -611,9 +749,9 @@
         }]
       };
 
-      // Render filtered view
+      // Render filtered view with cards
       const container = document.getElementById('dataContainerFilterMode');
-      container.innerHTML = renderSheetData(filteredData);
+      container.innerHTML = renderSheetDataAsCards(filteredData);
 
       // Update filter status
       isFiltered = true;
@@ -682,23 +820,26 @@
       }
     }
 
-    // Check authentication status on page load
+    // Check authentication status (returns boolean)
     async function checkAuth() {
       try {
         const response = await fetch('/api/auth/status');
         const data = await response.json();
-
-        if (!data.authenticated) {
-          // Show warning banner instead of redirecting
-          document.getElementById('authWarning').classList.add('show');
-        } else {
-          // Hide warning if authenticated
-          document.getElementById('authWarning').classList.remove('show');
-        }
+        return data.authenticated;
       } catch (err) {
         console.error('Auth check failed:', err);
-        document.getElementById('authWarning').classList.add('show');
+        return false;
       }
+    }
+
+    // Show authentication warning
+    function showAuthWarning() {
+      document.getElementById('authWarning').classList.add('show');
+    }
+
+    // Hide authentication warning
+    function hideAuthWarning() {
+      document.getElementById('authWarning').classList.remove('show');
     }
 
     // Load current sheet URL and name
@@ -734,7 +875,14 @@
 
         if (data.success) {
           alert('Sheet URL updated successfully');
-          loadSheetData();
+          // When changing URL to a new one, user needs to authenticate to fetch fresh data
+          const isAuth = await checkAuth();
+          if (!isAuth) {
+            showAuthWarning();
+          } else {
+            hideAuthWarning();
+          }
+          loadSheetData(true); // Force refresh with new URL
         } else {
           alert('Failed to update sheet URL');
         }
@@ -759,6 +907,21 @@
       cacheInfoDiv.innerHTML = '';
 
       try {
+        // If force refresh, check authentication first
+        if (forceRefresh) {
+          const isAuth = await checkAuth();
+          if (!isAuth) {
+            showAuthWarning();
+            const errorMsg = `<div class="error">Authentication required to refresh data. <a href="/auth.html">Authenticate now</a></div>`;
+            containerFilter.innerHTML = errorMsg;
+            containerAll.innerHTML = errorMsg;
+            clearStats();
+            return;
+          } else {
+            hideAuthWarning();
+          }
+        }
+
         let url = '/api/sheet/data';
         const params = new URLSearchParams();
         if (forceRefresh) params.append('refresh', 'true');
@@ -768,9 +931,10 @@
         const response = await fetch(url);
 
         if (response.status === 401) {
-          // Show warning instead of redirecting
-          document.getElementById('authWarning').classList.add('show');
-          // Try to continue anyway (might have cached data)
+          // Only show warning for auth errors on refresh
+          if (forceRefresh) {
+            showAuthWarning();
+          }
         }
 
         const data = await response.json();
@@ -780,7 +944,7 @@
             const errorMsg = `<div class="error">${data.error} <a href="/auth.html">Authenticate now</a></div>`;
             containerFilter.innerHTML = errorMsg;
             containerAll.innerHTML = errorMsg;
-            document.getElementById('authWarning').classList.add('show');
+            showAuthWarning();
           } else {
             const errorMsg = `<div class="error">Error: ${data.error}</div>`;
             containerFilter.innerHTML = errorMsg;
@@ -1011,6 +1175,91 @@
       return html;
     }
 
+    // Render a single topic with card layout for vocabulary words
+    function renderTopicAsCards(topic) {
+      let html = `<div class="word-cards-container">`;
+
+      topic.words.forEach((word, idx) => {
+        const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+        let flagClass = '';
+        let flagText = '';
+        
+        if (flagValue === 'n') {
+          flagClass = 'new';
+          flagText = 'N';
+        } else if (flagValue === 'y') {
+          flagClass = 'known';
+          flagText = 'Y';
+        } else if (flagValue === 'ok') {
+          flagClass = 'learned';
+          flagText = 'OK';
+        } else if (flagValue === '?') {
+          flagClass = 'forgotten';
+          flagText = '?';
+        } else {
+          flagClass = '';
+          flagText = flagValue || '';
+        }
+
+        html += `
+          <div class="word-card flag-${flagClass}">
+            ${flagText ? `<div class="card-flag ${flagClass}">${escapeHtml(flagText)}</div>` : ''}
+            <div class="word-main">
+              <div class="word-english">${escapeHtml(word.word)}</div>
+              ${word.pronunciation ? `<div class="word-pronunciation">${escapeHtml(word.pronunciation)}</div>` : ''}
+              ${word.partOfSpeech ? `<div class="word-pos">${escapeHtml(word.partOfSpeech)}</div>` : ''}
+            </div>
+            ${word.meaning ? `<div class="word-meaning">${escapeHtml(word.meaning)}</div>` : ''}
+            ${word.synonyms ? `
+              <div class="word-synonyms">
+                <div class="synonyms-label">Synonyms</div>
+                <div class="synonyms-text">${escapeHtml(word.synonyms)}</div>
+              </div>
+            ` : ''}
+            ${word.exampleSentence ? `<div class="word-example">${escapeHtml(word.exampleSentence)}</div>` : ''}
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+
+      return html;
+    }
+
+    // Render sheet data as cards for newest topic filter
+    function renderSheetDataAsCards(data) {
+      let html = '';
+
+      // Render each worksheet
+      if (data.worksheets && data.worksheets.length > 0) {
+        data.worksheets.forEach((worksheet, index) => {
+          html += renderWorksheetAsCards(worksheet, index);
+        });
+      } else {
+        html += '<div class="error">No worksheet data found</div>';
+      }
+
+      return html;
+    }
+
+    // Render a single worksheet with card layout
+    function renderWorksheetAsCards(worksheet, index) {
+      let html = '';
+
+      if (worksheet.error) {
+        html += `<div class="error">Error: ${escapeHtml(worksheet.error)}</div>`;
+      } else if (worksheet.topics && worksheet.topics.length > 0) {
+        // Render each topic as cards
+        worksheet.topics.forEach(topic => {
+          html += renderTopicAsCards(topic);
+        });
+      } else {
+        html += '<div class="error">No data in this worksheet</div>';
+      }
+
+      return html;
+    }
+
     // Helper function to escape HTML
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -1130,10 +1379,8 @@
       await loadSheetUrl();
       
       // Load data immediately (will use cache if available)
+      // No authentication required for cached data
       await loadSheetData();
-      
-      // Check authentication in background
-      checkAuth();
     }
 
     // Start initialization
