@@ -121,13 +121,6 @@
           return;
         }
 
-        // If we have device code info, display it
-        if (statusData.userCode && statusData.verificationUri) {
-          displayAuthInstructions(statusData.userCode, statusData.verificationUri);
-          startPolling();
-          return;
-        }
-
         // Otherwise, start new authentication
         const response = await fetch('/api/auth/start', { method: 'POST' });
         const data = await response.json();
