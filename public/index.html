@@ -82,9 +82,29 @@
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
-    .sheet-url-section input.sheet-name-input {
+    .worksheet-dropdown {
+      position: relative;
       flex: 0 0 200px;
       min-width: 150px;
+      display: block;
+    }
+    .worksheet-dropdown select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #cbdffa;
+      border-radius: 8px;
+      font-size: 14px;
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .worksheet-dropdown select:focus {
+      border-color: #4a9eff;
+      box-shadow: 0 0 8px rgba(74, 158, 255, 0.3);
+      outline: none;
+    }
+    .worksheet-dropdown select:hover {
+      border-color: #b8d4f1;
     }
     .sheet-url-section button {
       padding: 12px 24px;
@@ -414,6 +434,44 @@
       position: relative;
       overflow: hidden;
     }
+    /* Topic-based filters - Blue gradient */
+    .topic-filter-buttons button.btn-topic {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    .topic-filter-buttons button.btn-topic:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    }
+    /* Word count-based filters - Green gradient */
+    .topic-filter-buttons button.btn-words {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    }
+    .topic-filter-buttons button.btn-words:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(17, 153, 142, 0.4);
+    }
+    /* Flag-based filters - Purple gradient */
+    .topic-filter-buttons button.btn-flags {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: #333;
+      box-shadow: 0 4px 15px rgba(168, 237, 234, 0.3);
+    }
+    .topic-filter-buttons button.btn-flags:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(168, 237, 234, 0.4);
+    }
+    /* Game mode - Orange gradient */
+    .topic-filter-buttons button.btn-game {
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      color: #333;
+      box-shadow: 0 4px 15px rgba(255, 154, 158, 0.3);
+    }
+    .topic-filter-buttons button.btn-game:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(255, 154, 158, 0.4);
+    }
     .topic-filter-buttons button::before {
       content: '';
       position: absolute;
@@ -440,6 +498,33 @@
     }
     .topic-filter-buttons button[style*="background: #666"]:hover {
       box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      transform: translateX(400px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      max-width: 300px;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification.success {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .notification.error {
+      background: linear-gradient(135deg, #f93b1d 0%, #ea1e63 100%);
+    }
+    .notification.info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     .filter-status {
       color: #f93b1d;
@@ -678,9 +763,51 @@
     .card-flag.forgotten {
       background: linear-gradient(135deg, #f97316, #ea580c);
     }
+    .loading-indicator {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid #007acc;
+      border-radius: 8px;
+      padding: 20px 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .loading-indicator.show {
+      display: block;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007acc;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+  <!-- Loading Indicator -->
+  <div id="loadingIndicator" class="loading-indicator">
+    <div class="spinner"></div>
+    <span id="loadingText">Loading...</span>
+  </div>
+  
   <div class="container">
     <div id="authWarning" class="auth-warning">
       ⚠️ Authentication expired or not completed. <a onclick="window.location.href='/auth.html'">Click here to authenticate</a>. You can still view cached data below.
@@ -692,7 +819,11 @@
       <label for="sheetUrl">Excel Sheet URL:</label>
       <div class="url-input-group">
         <input type="text" id="sheetUrl" placeholder="Enter SharePoint/OneDrive sharing link">
-        <input type="text" id="sheetName" class="sheet-name-input" placeholder="Sheet name (optional)">
+        <div class="worksheet-dropdown" id="worksheetDropdown">
+          <select id="worksheetSelect" disabled>
+            <option value="">Enter URL first to see worksheets</option>
+          </select>
+        </div>
         <button onclick="updateSheetUrl()">Update URL</button>
         <button class="btn-refresh" onclick="refreshSheetData()">🔄 Refresh Data</button>
         <div id="cacheInfo" style="margin-left: auto;"></div>
@@ -732,16 +863,19 @@
       </div>
       <div id="filterMode" class="tab-content active">
         <div class="topic-filter-buttons">
-          <button onclick="filterByNewestTopic()">📍 Newest Topic</button>
-          <button onclick="filterBy5NewestTopics()">📚 5 Newest Topics</button>
-          <button onclick="filter30NewestWords()">⭐ 30 Newest Words</button>
-          <button onclick="filterRandomNewWords()">🎲 10 Random New Words</button>
-          <button onclick="startGameMode()">🎮 Play Game</button>
+          <button class="btn-topic" onclick="filterByNewestTopic()">📍 Newest Topic</button>
+          <button class="btn-topic" onclick="filterBy5NewestTopics()">📚 5 Newest Topics</button>
+          <button class="btn-words" onclick="filter30NewestWords()">⭐ 30 Newest Words</button>
+          <button class="btn-words" onclick="filterRandomNewWords()">🎲 10 Random New Words</button>
+          <button class="btn-flags" onclick="filterByFlagN()">🆕 New Words (N)</button>
+          <button class="btn-flags" onclick="filterByFlagOK()">👍 Learned Words (OK)</button>
+          <button class="btn-flags" onclick="filterByFlagForgotten()">❓ Forgotten Words (?)</button>
+          <button class="btn-game" onclick="startGameMode()">🎮 Play Game</button>
           <button onclick="clearFilter()" id="clearFilterBtn" style="display: none; background: #666;">Clear Filter</button>
           <span id="filterStatus"></span>
         </div>
         <div id="dataContainerFilterMode">
-          <div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "📚 5 Newest Topics", "⭐ 30 Newest Words", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>
+          <div style="padding: 20px; color: #666; text-align: center;">Click filter buttons above to view vocabulary: Topics, Words by Count, or Words by Status (New, Learned, Forgotten)</div>
         </div>
       </div>
       <div id="allVocabMode" class="tab-content">
@@ -922,6 +1056,85 @@
       if (!gameMode || currentWordIndex >= gameWords.length - 1) return;
       currentWordIndex++;
       showGameWord();
+    }
+
+    // Filter words by flag 'n' (New words)
+    function filterByFlagN() {
+      filterByFlag('n', '🆕 New Words', 'new');
+    }
+
+    // Filter words by flag 'ok' (Learned words)
+    function filterByFlagOK() {
+      filterByFlag('ok', '👍 Learned Words', 'learned');
+    }
+
+    // Filter words by flag '?' (Forgotten words)
+    function filterByFlagForgotten() {
+      filterByFlag('?', '❓ Forgotten Words', 'forgotten');
+    }
+
+    // Generic function to filter words by flag
+    function filterByFlag(flagValue, displayName, flagClass) {
+      if (!currentData || !currentData.worksheets || currentData.worksheets.length === 0) {
+        alert('No data to filter');
+        return;
+      }
+
+      // Collect all words with the specified flag from all worksheets and topics
+      let flaggedWords = [];
+      currentData.worksheets.forEach(worksheet => {
+        if (worksheet.topics && worksheet.topics.length > 0) {
+          worksheet.topics.forEach(topic => {
+            if (topic.words && topic.words.length > 0) {
+              topic.words.forEach(word => {
+                const wordFlagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                if (wordFlagValue === flagValue.toLowerCase()) {
+                  flaggedWords.push({
+                    ...word,
+                    topicName: topic.name,
+                    worksheetName: worksheet.name
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+
+      if (flaggedWords.length === 0) {
+        alert(`No ${displayName.toLowerCase()} found in the data`);
+        return;
+      }
+
+      // Create a mock topic structure for rendering
+      const flagTopic = {
+        name: `${displayName} (${flaggedWords.length} words)`,
+        words: flaggedWords
+      };
+
+      // Create filtered data structure
+      const filteredData = {
+        worksheets: [{
+          name: 'Flag Filter',
+          topics: [flagTopic]
+        }]
+      };
+
+      // Render filtered view with cards directly
+      const container = document.getElementById('dataContainerFilterMode');
+      container.innerHTML = renderSheetDataAsCards(filteredData);
+      // Remove container styling to show cards directly
+      container.style.padding = '0';
+      container.style.margin = '0';
+      container.style.background = 'transparent';
+      container.style.border = 'none';
+      container.style.boxShadow = 'none';
+
+      // Update filter status
+      isFiltered = true;
+      document.getElementById('filterStatus').innerHTML = `Found <strong>${flaggedWords.length} ${displayName.toLowerCase()}</strong>`;
+      document.getElementById('filterStatus').className = 'filter-status';
+      document.getElementById('clearFilterBtn').style.display = 'inline-block';
     }
 
     // Filter to show 30 newest words (by order in data)
@@ -1187,7 +1400,7 @@
 
       // Re-render empty state in filter mode
       const container = document.getElementById('dataContainerFilterMode');
-      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic", "📚 5 Newest Topics", "⭐ 30 Newest Words", "🎲 10 Random New Words" or "🎮 Play Game" button above to filter vocabulary</div>';
+      container.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click filter buttons above to view vocabulary: Topics, Words by Count, or Words by Status (New, Learned, Forgotten)</div>';
       // Reset container styling
       container.style.padding = '';
       container.style.margin = '';
@@ -1275,16 +1488,86 @@
         const response = await fetch('/api/sheet/url');
         const data = await response.json();
         document.getElementById('sheetUrl').value = data.sheetUrl;
-        document.getElementById('sheetName').value = data.sheetName || '';
+        
+        // Set selected worksheet in dropdown
+        const worksheetSelect = document.getElementById('worksheetSelect');
+        if (data.sheetName && worksheetSelect) {
+          worksheetSelect.value = data.sheetName;
+        }
+        
+        // Set up event handlers once
+        setupEventHandlers();
+        
+        // If we have a sheet URL, try to load worksheets
+        if (data.sheetUrl) {
+          await loadWorksheets().catch(err => {
+            console.log('Could not load worksheets:', err.message);
+          });
+        }
       } catch (err) {
         console.error('Failed to load sheet URL:', err);
+      }
+    }
+
+    // Set up event handlers
+    function setupEventHandlers() {
+      // Only set up once
+      if (window.eventHandlersSetup) return;
+      window.eventHandlersSetup = true;
+      
+      // Handle sheet URL changes
+      const sheetUrlInput = document.getElementById('sheetUrl');
+      if (sheetUrlInput) {
+        sheetUrlInput.addEventListener('change', async function() {
+          showLoading('Updating sheet URL...');
+          
+          try {
+            const response = await fetch('/api/sheet/url', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: this.value })
+            });
+            
+            const result = await response.json();
+            if (response.ok) {
+              showNotification('✅ Sheet URL updated', 'success', 2000);
+              // Load worksheets for the new URL
+              await loadWorksheets();
+            } else {
+              showNotification(`❌ ${result.error}`, 'error', 3000);
+            }
+          } catch (error) {
+            console.error('Error updating URL:', error);
+            showNotification('❌ Failed to update URL', 'error', 3000);
+          } finally {
+            hideLoading();
+          }
+        });
+      }
+      
+      // Handle Enter key press on sheet name input (if it exists)
+      const sheetNameInput = document.getElementById('sheetName');
+      if (sheetNameInput) {
+        sheetNameInput.addEventListener('keypress', async function(e) {
+          if (e.key === 'Enter') {
+            const sheetName = this.value;
+            
+            showLoading(`Loading "${sheetName}" data...`);
+            
+            try {
+              await loadSheetData(sheetName);
+            } finally {
+              hideLoading();
+            }
+          }
+        });
       }
     }
 
     // Update sheet URL and name
     async function updateSheetUrl() {
       const sheetUrl = document.getElementById('sheetUrl').value;
-      const sheetName = document.getElementById('sheetName').value;
+      const sheetName = document.getElementById('worksheetSelect').value;
 
       if (!sheetUrl) {
         alert('Please enter a sheet URL');
@@ -1292,6 +1575,8 @@
       }
 
       try {
+        showNotification('🔗 Updating sheet URL...', 'info', 2000);
+        
         const response = await fetch('/api/sheet/url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1301,30 +1586,150 @@
         const data = await response.json();
 
         if (data.success) {
-          alert('Sheet URL updated successfully');
+          showNotification('✅ Sheet URL updated successfully', 'success', 2000);
+          
+          if (data.cacheCleared) {
+            console.log('Cache cleared due to URL change');
+          }
+          
+          // Fetch and show worksheet dropdown
+          await loadWorksheets();
+          
           // Load cached data from the new URL (no refresh unless user explicitly clicks refresh)
           loadSheetData(false);
         } else {
-          alert('Failed to update sheet URL');
+          showNotification('❌ Failed to update sheet URL', 'error', 3000);
         }
       } catch (err) {
         console.error('Failed to update sheet URL:', err);
-        alert('Error updating sheet URL');
+        showNotification('❌ Error updating sheet URL', 'error', 3000);
+      }
+    }
+    
+    // Load worksheets list and populate dropdown
+    async function loadWorksheets() {
+      const select = document.getElementById('worksheetSelect');
+      
+      showLoading('Loading worksheets...');
+      
+      try {
+        const response = await fetch('/api/sheet/worksheets');
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Clear existing options and enable dropdown
+          select.innerHTML = '<option value="">Choose worksheet...</option>';
+          select.disabled = false;
+          
+          // Filter worksheets to only show those starting with 'vocab' (case-insensitive)
+          const vocabWorksheets = data.worksheets.filter(worksheet => 
+            worksheet.name.toLowerCase().startsWith('vocab')
+          );
+          
+          // Add filtered worksheet options
+          vocabWorksheets.forEach(worksheet => {
+            const option = document.createElement('option');
+            option.value = worksheet.name;
+            option.textContent = worksheet.name;
+            select.appendChild(option);
+          });
+          
+          // Show appropriate success message based on cache status
+          if (data._cached) {
+            showNotification(`� Loaded ${vocabWorksheets.length} cached vocab worksheets`, 'success', 2000);
+            console.log('Used cached worksheet metadata from:', data._cachedAt);
+          } else {
+            showNotification(`🆕 Found ${vocabWorksheets.length} vocab worksheets`, 'success', 2000);
+            console.log('Fetched fresh worksheet metadata');
+          }
+          
+          // Show info if some worksheets were filtered out
+          if (data.worksheets.length > vocabWorksheets.length) {
+            console.log(`Filtered ${data.worksheets.length - vocabWorksheets.length} non-vocab worksheets`);
+          }
+          
+          // Set up change handler
+          select.onchange = function() {
+            if (this.value) {
+              handleWorksheetSelection(this.value);
+            }
+          };
+          
+          // Auto-select first worksheet if available
+          if (vocabWorksheets.length > 0) {
+            select.selectedIndex = 1; // Select first worksheet (index 1, since 0 is placeholder)
+            handleWorksheetSelection(vocabWorksheets[0].name);
+          }
+        } else {
+          // Show error and disable dropdown
+          console.error('Error fetching worksheets:', data.error);
+          showNotification(`❌ ${data.error}`, 'error', 4000);
+          
+          select.innerHTML = '<option value="">Error loading worksheets</option>';
+          select.disabled = true;
+        }
+      } catch (err) {
+        console.error('Failed to load worksheets:', err);
+        showNotification('❌ Failed to load worksheets', 'error', 3000);
+        
+        select.innerHTML = '<option value="">Failed to load worksheets</option>';
+        select.disabled = true;
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // Handle worksheet selection from dropdown
+    async function handleWorksheetSelection(worksheetName) {
+      console.log('Selected worksheet:', worksheetName);
+      
+      showLoading(`Loading data for "${worksheetName}"...`);
+      
+      try {
+        // Load data for the selected worksheet
+        await loadSheetData(worksheetName);
+      } finally {
+        hideLoading();
       }
     }
 
     // Load sheet data
-    async function loadSheetData(forceRefresh = false) {
+    async function loadSheetData(sheetName = '', forceRefresh = false) {
       const containerFilter = document.getElementById('dataContainerFilterMode');
       const containerAll = document.getElementById('dataContainerAllVocab');
       const cacheInfoDiv = document.getElementById('cacheInfo');
-      const sheetName = document.getElementById('sheetName').value;
+      const worksheetSelect = document.getElementById('worksheetSelect');
+      
+      // Use param or dropdown value
+      if (!sheetName) {
+        sheetName = worksheetSelect.value;
+      }
+      
+      // Don't show data when no sheet is selected
+      if (!sheetName || !sheetName.trim()) {
+        console.log('⚠️ No sheet selected, clearing data');
+        containerFilter.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+        containerAll.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+        cacheInfoDiv.innerHTML = '';
+        clearStats();
+        return;
+      }
+      
+      console.log(`🔄 Loading sheet data - Sheet: "${sheetName}", Force Refresh: ${forceRefresh}`);
+      
+      // Show loading indicator for non-refresh direct calls (when not called from handleWorksheetSelection)
+      const showLoadingIndicator = !forceRefresh && sheetName && sheetName.trim();
+      
+      if (showLoadingIndicator) {
+        showLoading(sheetName ? `Loading "${sheetName}" data...` : 'Loading sheet data...');
+      }
       
       // Only show loading if forcing refresh (never on page load)
       if (forceRefresh) {
         containerFilter.innerHTML = '<div class="loading">Refreshing data...</div>';
         containerAll.innerHTML = '<div class="loading">Refreshing data...</div>';
         cacheInfoDiv.innerHTML = '';
+        showNotification('🛜 Fetching fresh data from OneDrive...', 'info', 3000);
       }
       
       try {
@@ -1338,17 +1743,29 @@
         const data = await response.json();
 
         if (data.error) {
-          // Only show errors if refreshing or if we have no current data
-          if (forceRefresh || !currentData) {
+          // Show errors if refreshing, no current data, or requesting specific sheet that needs auth
+          const isRequestingSpecificSheet = sheetName && sheetName.trim();
+          if (forceRefresh || !currentData || isRequestingSpecificSheet) {
             if (response.status === 401) {
-              const errorMsg = `<div class="error">${data.error} <a href="/auth.html">Authenticate now</a></div>`;
+              let errorMessage = data.error;
+              if (data.missingSheets && data.missingSheets.length > 0) {
+                errorMessage = `Sheet "${data.missingSheets.join(', ')}" not found in cache. Authentication required to fetch from OneDrive.`;
+              }
+              const errorMsg = `<div class="error">${errorMessage} <a href="/auth.html">Authenticate now</a></div>`;
               containerFilter.innerHTML = errorMsg;
               containerAll.innerHTML = errorMsg;
               showAuthWarning();
+              if (forceRefresh) {
+                showNotification('❌ Authentication required for refresh', 'error', 4000);
+              } else if (isRequestingSpecificSheet) {
+                showNotification(`❌ Authentication required to load "${sheetName}"`, 'error', 4000);
+              }
             } else {
               const errorMsg = `<div class="error">Error: ${data.error}</div>`;
               containerFilter.innerHTML = errorMsg;
               containerAll.innerHTML = errorMsg;
+              if (forceRefresh) showNotification(`❌ Error: ${data.error}`, 'error', 4000);
+              else if (isRequestingSpecificSheet) showNotification(`❌ Failed to load "${sheetName}": ${data.error}`, 'error', 4000);
             }
             clearStats();
             cacheInfoDiv.innerHTML = '';
@@ -1356,6 +1773,18 @@
         } else {
           // Always hide auth warning if we got data
           hideAuthWarning();
+          
+          // Show success notification for refresh or sheet loading
+          if (forceRefresh) {
+            const wordCount = data.worksheets ? data.worksheets.reduce((total, ws) => total + (ws.topics ? ws.topics.reduce((t, topic) => t + (topic.words ? topic.words.length : 0), 0) : 0), 0) : 0;
+            const sheetsInfo = data._sheets && data._sheets.length > 1 ? ` from ${data._sheets.length} sheets` : '';
+            showNotification(`✅ Data refreshed! ${wordCount} words loaded${sheetsInfo}`, 'success', 3000);
+          } else if (sheetName && sheetName.trim() && (!currentData || currentData._sheets?.[0] !== sheetName.trim())) {
+            // Show notification when loading a specific sheet (not refresh, and different from current)
+            const wordCount = data.worksheets ? data.worksheets.reduce((total, ws) => total + (ws.topics ? ws.topics.reduce((t, topic) => t + (topic.words ? topic.words.length : 0), 0) : 0), 0) : 0;
+            const sheetsInfo = data._sheets && data._sheets.length > 1 ? ` from ${data._sheets.length} sheets` : '';
+            showNotification(`📊 Loaded "${sheetName.trim()}"! ${wordCount} words${sheetsInfo}`, 'info', 2500);
+          }
           
           // Update cache info (only if refreshing or no data was displayed yet)
           if (forceRefresh || !currentData) {
@@ -1370,7 +1799,8 @@
                 month: 'numeric',
                 year: 'numeric'
               });
-              cacheInfoDiv.innerHTML = `<div class="cache-info">📦 Cached: ${cachedTime}</div>`;
+              const sheetsInfo = data._sheets && data._sheets.length > 1 ? ` (${data._sheets.length} sheets)` : '';
+              cacheInfoDiv.innerHTML = `<div class="cache-info">📦 Cached: ${cachedTime}${sheetsInfo}</div>`;
             } else if (data._fetchedAt) {
               const fetchedTime = new Date(data._fetchedAt).toLocaleString('vi-VN', {
                 hour: '2-digit',
@@ -1380,7 +1810,8 @@
                 month: 'numeric',
                 year: 'numeric'
               });
-              cacheInfoDiv.innerHTML = `<div class="cache-info fresh">✨ Fresh: ${fetchedTime}</div>`;
+              const sheetsInfo = data._sheets && data._sheets.length > 1 ? ` (${data._sheets.length} sheets)` : '';
+              cacheInfoDiv.innerHTML = `<div class="cache-info fresh">✨ Fresh: ${fetchedTime}${sheetsInfo}</div>`;
             }
           }
 
@@ -1415,12 +1846,59 @@
           containerAll.innerHTML = errorMsg;
           clearStats();
         }
+        if (forceRefresh) {
+          showNotification(`❌ Failed to refresh: ${err.message}`, 'error', 4000);
+        }
+      } finally {
+        if (showLoadingIndicator) {
+          hideLoading();
+        }
       }
     }
 
+    // Loading indicator functions
+    function showLoading(text = 'Loading...') {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingIndicator').classList.add('show');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loadingIndicator').classList.remove('show');
+    }
+
+    // Notification system
+    function showNotification(message, type = 'info', duration = 3000) {
+      // Remove existing notifications
+      const existing = document.querySelectorAll('.notification');
+      existing.forEach(n => n.remove());
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      // Trigger animation
+      setTimeout(() => notification.classList.add('show'), 100);
+      
+      // Auto remove
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, duration);
+    }
+
     // Refresh sheet data (force fetch from OneDrive)
-    function refreshSheetData() {
-      loadSheetData(true);
+    async function refreshSheetData() {
+      const currentSheet = document.getElementById('worksheetSelect')?.value;
+      
+      showLoading('Refreshing data...');
+      
+      try {
+        await loadSheetData(currentSheet, true);
+      } finally {
+        hideLoading();
+      }
     }
 
     // Render sheet data as tables
@@ -1958,29 +2436,33 @@
     }
 
     // Initialize page - display cached data immediately if available
-    function initPage() {
+    async function initPage() {
       console.log('Initializing page...');
       
-      // Show statistics container immediately
-      const statsSummary = document.getElementById('statsSummary');
-      if (statsSummary) {
-        statsSummary.style.display = 'grid';
-      }
+      showLoading('Initializing application...');
       
-      // Check if we have embedded cached data and display it immediately
-      if (window.CACHED_DATA) {
-        console.log('Displaying embedded cached data immediately');
-        displayDataInstantly(window.CACHED_DATA, window.CACHE_TIMESTAMP);
-      } else {
-        console.log('No embedded data, loading from API cache immediately');
-        // Load from API cache immediately without showing loading
-        loadSheetDataSilent();
+      try {
+        // Show statistics container immediately
+        const statsSummary = document.getElementById('statsSummary');
+        if (statsSummary) {
+          statsSummary.style.display = 'grid';
+        }
+        
+        // Check if we have embedded cached data and display it immediately
+        if (window.CACHED_DATA) {
+          console.log('Displaying embedded cached data immediately');
+          displayDataInstantly(window.CACHED_DATA, window.CACHE_TIMESTAMP);
+        } else {
+          console.log('No embedded data, loading from API cache immediately');
+          // Load from API cache immediately without showing loading
+          loadSheetDataSilent();
+        }
+        
+        // Load sheet URL and name in background (async)
+        await loadSheetUrl();
+      } finally {
+        hideLoading();
       }
-      
-      // Load sheet URL and name in background (async)
-      setTimeout(() => {
-        loadSheetUrl();
-      }, 0);
     }
 
     // Display data instantly without any loading states
@@ -2038,7 +2520,10 @@
     }
 
     // Start initialization immediately (synchronously)
-    initPage();
+    initPage().catch(err => {
+      console.error('Failed to initialize page:', err);
+      hideLoading();
+    });
   </script>
 </body>
 </html>

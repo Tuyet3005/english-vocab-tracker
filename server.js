@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 3001;
 const STATE_KEY = 'server-state.json';
 const CACHE_KEY = 'sheet-data-cache.json';
 const STATS_CACHE_KEY = 'sheet-stats-cache.json';
+const METADATA_CACHE_KEY = 'sheet-metadata-cache.json';
 
 // IMPORTANT: This data is now stored in TigrisData cloud storage.
 // NEVER expose authentication tokens and credentials to the frontend.
@@ -24,6 +25,7 @@ const STATS_CACHE_KEY = 'sheet-stats-cache.json';
 const STATE_FILE = path.join(__dirname, 'server-state.json');
 const CACHE_FILE = path.join(__dirname, 'sheet-data-cache.json');
 const STATS_CACHE_FILE = path.join(__dirname, 'sheet-stats-cache.json');
+const METADATA_CACHE_FILE = path.join(__dirname, 'sheet-metadata-cache.json');
 
 // Middleware
 app.use(express.json());
@@ -161,14 +163,21 @@ async function loadCache() {
 
 async function saveCache(sheetUrl, data, sheetName = '') {
   try {
-    const cacheData = {
-      sheetUrl,
-      sheetName,
+    const cache = await loadCache() || {};
+    
+    // Initialize the sheetUrl object if it doesn't exist
+    if (!cache[sheetUrl]) {
+      cache[sheetUrl] = {};
+    }
+    
+    // Store data for the specific sheet
+    cache[sheetUrl][sheetName || 'default'] = {
       data,
       timestamp: new Date().toISOString()
     };
-    await put(CACHE_KEY, JSON.stringify(cacheData, null, 2));
-    console.log('Cache saved to Tigris for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '');
+    
+    await put(CACHE_KEY, JSON.stringify(cache, null, 2));
+    console.log('Cache saved to Tigris for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '(Default sheet)');
   } catch (err) {
     console.error('Error saving cache to Tigris:', err.message);
   }
@@ -176,13 +185,93 @@ async function saveCache(sheetUrl, data, sheetName = '') {
 
 async function getCachedData(sheetUrl, sheetName = '') {
   const cache = await loadCache();
-  if (cache && cache.sheetUrl === sheetUrl && cache.sheetName === sheetName) {
-    console.log('Using cached data from:', cache.timestamp);
+  if (cache && cache[sheetUrl] && cache[sheetUrl][sheetName || 'default']) {
+    const cachedSheet = cache[sheetUrl][sheetName || 'default'];
+    console.log('Using cached data from:', cachedSheet.timestamp);
     return {
-      ...cache.data,
+      ...cachedSheet.data,
       _cached: true,
-      _cachedAt: cache.timestamp
+      _cachedAt: cachedSheet.timestamp
     };
+  }
+  return null;
+}
+
+// Clear cache for specific URL
+async function clearCacheForUrl(sheetUrl) {
+  try {
+    const cache = await loadCache() || {};
+    if (cache[sheetUrl]) {
+      delete cache[sheetUrl];
+      await put(CACHE_KEY, JSON.stringify(cache, null, 2));
+      console.log('Cleared cache for URL:', sheetUrl);
+    }
+    
+    // Also clear stats cache
+    const statsCache = await loadStatsCache() || {};
+    if (statsCache[sheetUrl]) {
+      delete statsCache[sheetUrl];
+      await put(STATS_CACHE_KEY, JSON.stringify(statsCache, null, 2));
+      console.log('Cleared stats cache for URL:', sheetUrl);
+    }
+    // Also clear metadata cache
+    const metadataCache = await loadMetadataCache() || {};
+    if (metadataCache[sheetUrl]) {
+      delete metadataCache[sheetUrl];
+      await put(METADATA_CACHE_KEY, JSON.stringify(metadataCache, null, 2));
+      console.log('Cleared metadata cache for URL:', sheetUrl);
+    }
+  } catch (err) {
+    console.error('Error clearing cache:', err.message);
+  }
+}
+
+// Metadata cache management with Tigris
+async function loadMetadataCache() {
+  try {
+    const data = await get(METADATA_CACHE_KEY, 'string');
+    return JSON.parse(data.data);
+  } catch (err) {
+    if (err.code === 'NoSuchKey' || err.message?.includes('not found')) {
+      console.log('No metadata cache found in Tigris storage');
+    } else {
+      console.error('Error loading metadata cache from Tigris:', err.message);
+    }
+  }
+  return null;
+}
+
+async function saveMetadataCache(sheetUrl, metadata) {
+  try {
+    const cache = await loadMetadataCache() || {};
+    
+    cache[sheetUrl] = {
+      metadata,
+      timestamp: new Date().toISOString()
+    };
+    
+    await put(METADATA_CACHE_KEY, JSON.stringify(cache, null, 2));
+    console.log('Metadata cache saved to Tigris for URL:', sheetUrl);
+  } catch (err) {
+    console.error('Error saving metadata cache to Tigris:', err.message);
+  }
+}
+
+async function getCachedMetadata(sheetUrl) {
+  const cache = await loadMetadataCache();
+  if (cache && cache[sheetUrl]) {
+    const cachedMeta = cache[sheetUrl];
+    // Check if cache is less than 1 hour old
+    const cacheTime = new Date(cachedMeta.timestamp);
+    const now = new Date();
+    const hoursDiff = (now - cacheTime) / (1000 * 60 * 60);
+    
+    if (hoursDiff < 1) {
+      console.log('Using cached metadata from:', cachedMeta.timestamp);
+      return cachedMeta.metadata;
+    } else {
+      console.log('Metadata cache expired, will fetch fresh');
+    }
   }
   return null;
 }
@@ -225,14 +314,21 @@ async function saveStatsCache(sheetUrl, data, sheetName = '') {
       });
     }
 
-    const statsCache = {
-      sheetUrl,
-      sheetName,
+    const statsCache = await loadStatsCache() || {};
+    
+    // Initialize the sheetUrl object if it doesn't exist
+    if (!statsCache[sheetUrl]) {
+      statsCache[sheetUrl] = {};
+    }
+    
+    // Store stats for the specific sheet
+    statsCache[sheetUrl][sheetName || 'default'] = {
       worksheetStats,
       timestamp: new Date().toISOString()
     };
+    
     await put(STATS_CACHE_KEY, JSON.stringify(statsCache, null, 2));
-    console.log('Statistics cache saved to Tigris for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '');
+    console.log('Statistics cache saved to Tigris for URL:', sheetUrl, sheetName ? `(Sheet: ${sheetName})` : '(Default sheet)');
   } catch (err) {
     console.error('Error saving stats cache to Tigris:', err.message);
   }
@@ -240,9 +336,15 @@ async function saveStatsCache(sheetUrl, data, sheetName = '') {
 
 function getCachedStats(sheetUrl, sheetName = '') {
   const cache = loadStatsCache();
-  if (cache && cache.sheetUrl === sheetUrl && cache.sheetName === sheetName) {
-    console.log('Using cached statistics from:', cache.timestamp);
-    return cache;
+  if (cache && cache[sheetUrl] && cache[sheetUrl][sheetName || 'default']) {
+    const cachedSheet = cache[sheetUrl][sheetName || 'default'];
+    console.log('Using cached statistics from:', cachedSheet.timestamp);
+    return {
+      sheetUrl,
+      sheetName,
+      worksheetStats: cachedSheet.worksheetStats,
+      timestamp: cachedSheet.timestamp
+    };
   }
   return null;
 }
@@ -338,7 +440,7 @@ function stopTokenRefreshTimer() {
   }
 }
 
-// Initialize Graph client
+// Initialize Graph client and ensure token sync
 let deviceCodeInfo = null;
 
 function initializeGraph() {
@@ -354,6 +456,12 @@ function initializeGraph() {
       saveState(serverState);
     }
   );
+  
+  // Debug token state
+  console.log('GraphHelper initialized. Token available:', !!serverState.token);
+  if (serverState.token) {
+    console.log('Token expires at:', new Date(serverState.expiresOn).toLocaleString());
+  }
 }
 
 initializeGraph();
@@ -457,6 +565,13 @@ app.post('/api/sheet/url', async (req, res) => {
     return res.status(400).json({ error: 'Sheet URL is required' });
   }
 
+  // Clear cache if URL is different
+  const urlChanged = serverState.sheetUrl !== sheetUrl;
+  if (urlChanged && serverState.sheetUrl) {
+    console.log('Sheet URL changed, clearing cache for old URL');
+    await clearCacheForUrl(serverState.sheetUrl);
+  }
+
   serverState.sheetUrl = sheetUrl;
   serverState.sheetName = sheetName || '';
   await saveState(serverState);
@@ -464,109 +579,231 @@ app.post('/api/sheet/url', async (req, res) => {
   res.json({ 
     success: true, 
     sheetUrl: serverState.sheetUrl,
-    sheetName: serverState.sheetName
+    sheetName: serverState.sheetName,
+    cacheCleared: urlChanged
   });
+});
+
+// Get worksheets list
+app.get('/api/sheet/worksheets', async (req, res) => {
+  try {
+    if (!serverState.sheetUrl) {
+      return res.status(400).json({ error: 'No sheet URL configured' });
+    }
+
+    // Check cache first
+    const cachedMetadata = await getCachedMetadata(serverState.sheetUrl);
+    if (cachedMetadata) {
+      console.log('Returning cached worksheet metadata');
+      return res.json({
+        fileName: cachedMetadata.fileName,
+        worksheets: cachedMetadata.worksheets,
+        sheetUrl: serverState.sheetUrl,
+        _cached: true,
+        _cachedAt: cachedMetadata.timestamp
+      });
+    }
+
+    if (!isAuthenticated()) {
+      return res.status(401).json({ 
+        error: 'Authentication required to fetch worksheets list'
+      });
+    }
+
+    console.log('Fetching fresh worksheets list for URL:', serverState.sheetUrl);
+    const worksheetList = await graphHelper.getWorksheetListAsync(serverState.sheetUrl, serverState.token);
+    
+    // Cache the metadata
+    await saveMetadataCache(serverState.sheetUrl, worksheetList);
+    
+    res.json({
+      fileName: worksheetList.fileName,
+      worksheets: worksheetList.worksheets,
+      sheetUrl: serverState.sheetUrl,
+      _cached: false,
+      _fetchedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Error fetching worksheets:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Get sheet data
 app.get('/api/sheet/data', async (req, res) => {
   const forceRefresh = req.query.refresh === 'true';
-  const sheetName = req.query.sheetName || serverState.sheetName || '';
+  const sheetNameParam = req.query.sheetName || serverState.sheetName || '';
+  
+  console.log(`📊 API Request - sheetNameParam: "${sheetNameParam}", forceRefresh: ${forceRefresh}`);
+  
+  // Parse multiple sheet names (comma-separated)
+  const sheetNames = sheetNameParam ? sheetNameParam.split(',').map(name => name.trim()).filter(name => name) : [''];
+  console.log('📋 Parsed sheet names:', sheetNames);
+  
+  // Handle empty sheet name case
+  if (sheetNames.length === 1 && sheetNames[0] === '') {
+    console.log('📋 Using default sheet (empty name)');
+  }
 
   try {
-    // Save the sheet name to state if it's different
-    if (sheetName !== serverState.sheetName) {
-      serverState.sheetName = sheetName;
+    // Save the sheet names to state if different (save as comma-separated string)
+    const sheetNamesString = sheetNames.join(', ');
+    if (sheetNamesString !== serverState.sheetName) {
+      serverState.sheetName = sheetNamesString;
       await saveState(serverState);
-      console.log('Saved sheet name to state:', sheetName);
+      console.log('Saved sheet names to state:', sheetNamesString);
     }
 
-    // Always serve cached data when available, regardless of refresh flag or authentication
-    const cachedData = await getCachedData(serverState.sheetUrl, sheetName);
-    if (cachedData && !forceRefresh) {
-      console.log('Returning cached data instantly');
-      return res.json(cachedData);
+    // Check cached data for all requested sheets
+    const cachedSheets = {};
+    const missingSheets = [];
+    
+    console.log(`🔍 Checking cache for sheets:`, sheetNames);
+    for (const sheetName of sheetNames) {
+      const cachedData = await getCachedData(serverState.sheetUrl, sheetName);
+      if (cachedData && !forceRefresh) {
+        cachedSheets[sheetName || 'default'] = cachedData;
+        console.log(`✅ Found cached data for sheet: "${sheetName || 'default'}"`);
+      } else {
+        missingSheets.push(sheetName);
+        console.log(`❌ Missing cached data for sheet: "${sheetName || 'default'}"`);
+      }
+    }
+    
+    console.log(`📊 Cache summary - Cached: ${Object.keys(cachedSheets).length}, Missing: ${missingSheets.length}`);
+    
+    // If all sheets are cached and no force refresh, return combined cached data
+    if (missingSheets.length === 0 && !forceRefresh) {
+      console.log('Returning all cached data instantly');
+      const combinedData = combineSheetData(cachedSheets);
+      return res.json(combinedData);
     }
 
-    // For refresh requests, require authentication
-    if (forceRefresh && !isAuthenticated()) {
-      // If force refresh but no auth, return cached data with a message if available
-      if (cachedData) {
-        console.log('Returning cached data (refresh requires auth)');
+    // For refresh requests or missing data, require authentication
+    if ((forceRefresh || missingSheets.length > 0) && !isAuthenticated()) {
+      console.log(`🔐 Authentication required - Authenticated: ${isAuthenticated()}, Missing sheets: ${missingSheets}`);
+      
+      // If we have some cached data for the EXACT sheets requested, return it with a message
+      if (Object.keys(cachedSheets).length > 0 && missingSheets.length === 0) {
+        // All requested sheets are cached, return them
+        console.log('Returning cached data for requested sheets (auth required for refresh)');
+        const combinedData = combineSheetData(cachedSheets);
         return res.json({
-          ...cachedData,
+          ...combinedData,
           _message: 'Authentication required to refresh. Showing cached data.'
         });
       }
+      
+      // If some sheets are missing and we need authentication
+      if (missingSheets.length > 0) {
+        console.log('Missing sheets and no authentication:', missingSheets);
+        return res.status(401).json({ 
+          error: `Authentication required to fetch sheet(s): ${missingSheets.join(', ')}`,
+          cached: false,
+          missingSheets: missingSheets
+        });
+      }
+      
+      // Force refresh requires auth
       return res.status(401).json({ 
         error: 'Authentication required to refresh data.',
         cached: false
       });
     }
 
-    // For non-refresh requests without exact cached data, try to get any cached data
-    if (!forceRefresh && !cachedData) {
-      // Try to get any cached data (even with different sheet name)
-      const allCachedData = loadCache();
-      if (allCachedData && allCachedData.data) {
-        console.log('Returning any available cached data instantly');
-        return res.json({
-          ...allCachedData.data,
-          _cached: true,
-          _cachedAt: allCachedData.timestamp,
-          _message: 'Showing available cached data'
-        });
+    // Fetch fresh data for missing sheets or specific sheet if force refresh  
+    const sheetsToFetch = forceRefresh ? [sheetNames[0]] : missingSheets; // Only refresh first sheet on force refresh
+    console.log('Fetching fresh data from OneDrive for sheets:', sheetsToFetch);
+    
+    const fetchedSheets = {};
+    for (const sheetName of sheetsToFetch) {
+      try {
+        console.log(`Fetching data for sheet: "${sheetName || 'default'}"`);
+        const data = await graphHelper.readExcelFileAsync(serverState.sheetUrl, sheetName, serverState.token);
+        const structuredData = dataTransformer.transformVocabData(data);
+        
+        // Save to cache
+        await saveCache(serverState.sheetUrl, structuredData, sheetName);
+        await saveStatsCache(serverState.sheetUrl, structuredData, sheetName);
+        
+        fetchedSheets[sheetName || 'default'] = {
+          ...structuredData,
+          _cached: false,
+          _fetchedAt: new Date().toISOString()
+        };
+        console.log(`Data cached successfully for sheet: "${sheetName || 'default'}"`);
+      } catch (sheetError) {
+        console.error(`Error fetching sheet "${sheetName}":`, sheetError.message);
+        fetchedSheets[sheetName || 'default'] = {
+          error: `Failed to fetch sheet "${sheetName}": ${sheetError.message}`,
+          worksheets: []
+        };
       }
     }
-
-    // If we reach here, we need to fetch fresh data and require authentication
-    if (!isAuthenticated()) {
-      return res.status(401).json({ 
-        error: 'Not authenticated. Please authenticate to fetch data.',
-        cached: false
-      });
-    }
-
-    // Fetch fresh data from OneDrive
-    console.log('Fetching fresh data from OneDrive...');
-    const data = await graphHelper.readExcelFileAsync(serverState.sheetUrl);
     
-    // Filter by sheet name if specified
-    let filteredData = data;
-    if (sheetName && data.worksheets) {
-      filteredData = {
-        ...data,
-        worksheets: data.worksheets.filter(ws => 
-          ws.name.toLowerCase().includes(sheetName.toLowerCase())
-        )
-      };
-      
-      if (filteredData.worksheets.length === 0) {
-        return res.status(404).json({ 
-          error: `Sheet "${sheetName}" not found. Available sheets: ${data.worksheets.map(ws => ws.name).join(', ')}` 
-        });
-      }
-    }
-
-    // Transform data into structured format
-    const structuredData = dataTransformer.transformVocabData(filteredData);
+    // Combine fetched data with existing cached data
+    const allSheets = { ...cachedSheets, ...fetchedSheets };
+    const combinedData = combineSheetData(allSheets);
     
-    // Save to cache (includes both data and statistics)
-    await saveCache(serverState.sheetUrl, structuredData, sheetName);
-    
-    // Also save statistics separately for faster access on subsequent requests
-    await saveStatsCache(serverState.sheetUrl, structuredData, sheetName);
-    console.log('Data and statistics cached successfully');
-    
-    res.json({
-      ...structuredData,
-      _cached: false,
-      _fetchedAt: new Date().toISOString()
-    });
+    res.json(combinedData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Helper function to combine data from multiple sheets
+function combineSheetData(sheetsData) {
+  const combined = {
+    worksheets: [],
+    _cached: true,
+    _fetchedAt: new Date().toISOString(),
+    _sheets: Object.keys(sheetsData)
+  };
+  
+  // Check if any sheet was freshly fetched
+  let hasAnyFresh = false;
+  let oldestCache = null;
+  
+  for (const [sheetName, data] of Object.entries(sheetsData)) {
+    if (data.error) {
+      // Add error information
+      combined.worksheets.push({
+        name: `Error - ${sheetName}`,
+        topics: [],
+        error: data.error
+      });
+      continue;
+    }
+    
+    if (!data._cached) {
+      hasAnyFresh = true;
+    }
+    
+    if (data._cachedAt) {
+      if (!oldestCache || new Date(data._cachedAt) < new Date(oldestCache)) {
+        oldestCache = data._cachedAt;
+      }
+    }
+    
+    if (data.worksheets && Array.isArray(data.worksheets)) {
+      // Add sheet name prefix to worksheet names to distinguish them
+      const prefixedWorksheets = data.worksheets.map(worksheet => ({
+        ...worksheet,
+        name: sheetName ? `[${sheetName}] ${worksheet.name}` : worksheet.name,
+        _sheetSource: sheetName || 'default'
+      }));
+      combined.worksheets.push(...prefixedWorksheets);
+    }
+  }
+  
+  // Update metadata
+  combined._cached = !hasAnyFresh;
+  if (oldestCache && combined._cached) {
+    combined._cachedAt = oldestCache;
+  }
+  
+  return combined;
+}
 
 // Start server
 app.listen(PORT, () => {
