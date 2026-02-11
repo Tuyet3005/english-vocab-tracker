@@ -1295,42 +1295,47 @@
       const container = document.getElementById('dataContainerFilterMode');
       
       container.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin: 0 auto;">
-          <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 40px;">
+        <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 700px; margin: 0 auto;">
+          <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 20px;">
             <button onclick="previousGameWord()" 
-                    style="background: #acd6ff; color: #1a5490; border: none; padding: 12px 24px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; ${currentWordIndex === 0 ? 'opacity: 0.4; cursor: not-allowed;' : ''}"
-                    ${currentWordIndex === 0 ? 'disabled' : ''}>
-              ⬅️ Previous Word
+                    style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2d3748; border: none; padding: 14px 48px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(168, 237, 234, 0.4); transition: all 0.3s ease; min-width: 180px; ${currentWordIndex === 0 ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+                    ${currentWordIndex === 0 ? 'disabled' : ''}
+                    onmouseover="if(!this.disabled) this.style.transform='translateY(-2px)'; if(!this.disabled) this.style.boxShadow='0 6px 16px rgba(168, 237, 234, 0.5)'"
+                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 12px rgba(168, 237, 234, 0.4)'">
+              ◀️ Prev Word
             </button>
-            <span style="font-weight: bold; background: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 8px; font-size: 14px;">
-              Word ${currentWordIndex + 1}/${gameWords.length}
+            <span style="font-weight: 700; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2d3748; padding: 10px 20px; border-radius: 20px; font-size: 15px; box-shadow: 0 3px 10px rgba(252, 182, 159, 0.3);">
+              ${currentWordIndex + 1} / ${gameWords.length}
             </span>
             <button onclick="nextGameWord()" 
-                    style="background: #e1fcea; color: #2a511d; border: none; padding: 12px 24px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; ${currentWordIndex === gameWords.length - 1 ? 'opacity: 0.4; cursor: not-allowed;' : ''}"
-                    ${currentWordIndex === gameWords.length - 1 ? 'disabled' : ''}>
-              Next Word ➡️
+                    style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); color: #2d3748; border: none; padding: 14px 48px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(161, 196, 253, 0.4); transition: all 0.3s ease; min-width: 180px; ${currentWordIndex === gameWords.length - 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''}"
+                    ${currentWordIndex === gameWords.length - 1 ? 'disabled' : ''}
+                    onmouseover="if(!this.disabled) this.style.transform='translateY(-2px)'; if(!this.disabled) this.style.boxShadow='0 6px 16px rgba(161, 196, 253, 0.5)'"
+                    onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 12px rgba(161, 196, 253, 0.4)'">
+              Next Word ▶️
             </button>
           </div>
           
           <div style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
-            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 500px; width: 100%;">
-              <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 16px;">
-                <h3 style="margin: 0 0 8px 0; color: #374151; font-size: 18px;">${word.topicName || 'Topic'}</h3>
-                <span style="color: #6b7280; font-size: 14px;">${word.worksheetName || 'Worksheet'}</span>
-                ${word.flag ? `<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">${word.flag}</span>` : ''}
-              </div>
-              <div style="text-align: center; margin-bottom: 16px;">
-                <div style="font-size: 24px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">
-                  ${word.english || 'N/A'}
+            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 650px; width: 100%;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 42px; font-weight: bold; color: #1f2937; margin-bottom: 12px; letter-spacing: -0.5px;">
+                  ${escapeHtml(word.word || 'N/A')}
                 </div>
-                <div style="font-size: 20px; color: #4b5563;">
-                  ${word.vietnamese || 'N/A'}
-                </div>
+                ${word.partOfSpeech ? `<div style="font-size: 16px; color: #6b7280; font-style: italic; margin-bottom: 8px;">${escapeHtml(word.partOfSpeech)}</div>` : ''}
+                ${word.pronunciation ? `<div style="font-size: 18px; color: #4b5563; margin-bottom: 8px;">${escapeHtml(word.pronunciation)}</div>` : ''}
               </div>
-              ${word.example ? `<div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #3b82f6;"><strong style="color: #1f2937;">Example:</strong> <span style="color: #4b5563;">${word.example}</span></div>` : ''}
-              ${word.note ? `<div style="background: #fef7ff; padding: 12px; border-radius: 8px; border-left: 4px solid #a855f7;"><strong style="color: #1f2937;">Note:</strong> <span style="color: #4b5563;">${word.note}</span></div>` : ''}
+              ${word.exampleSentence ? `<div style="background: #f9fafb; padding: 14px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #3b82f6;"><strong style="color: #1f2937;">Example:</strong> <span style="color: #4b5563; font-style: italic;">${boldWordInExample(word.word, word.exampleSentence)}</span></div>` : ''}
+              ${word.synonyms ? `<div style="background: #fef7ff; padding: 14px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #a855f7;"><strong style="color: #1f2937;">Synonyms:</strong> <span style="color: #4b5563;">${escapeHtml(word.synonyms)}</span></div>` : ''}
+              ${word.flag ? `<div style="text-align: center; margin-top: 16px;"><span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">Flag: ${word.flag}</span></div>` : ''}
             </div>
           </div>
+          
+          ${word.meaning ? `<div style="width: 100%; display: flex; justify-content: center; margin-top: 16px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 18px 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); max-width: 450px; width: 100%; text-align: center;">
+              <div style="font-size: 20px; color: white; font-weight: 500;">${escapeHtml(word.meaning)}</div>
+            </div>
+          </div>` : ''}
         </div>
       `;
       
