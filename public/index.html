@@ -466,6 +466,55 @@
       outline: 3px solid rgba(255, 90, 149, 0.35);
       outline-offset: 2px;
     }
+    .today-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #fff5f9 0%, #e8f4fd 100%);
+      border-radius: 12px;
+      font-weight: 600;
+      color: #333;
+    }
+    .today-practice-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .today-summary .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      font-size: 13px;
+    }
+    .today-summary .pill.total {
+      background: linear-gradient(135deg, #ffd6e7 0%, #ffc1da 100%);
+      color: #7a2d4f;
+    }
+    .today-summary .pill.n {
+      background: linear-gradient(135deg, #fcdcdf 0%, #f8c7cc 100%);
+      color: #7a2d4f;
+    }
+    .today-summary .pill.y {
+      background: linear-gradient(135deg, #c6e0b4 0%, #b3d19f 100%);
+      color: #2a511d;
+    }
+    .today-summary .pill.ok {
+      background: linear-gradient(135deg, #fff2cc 0%, #ffe7ad 100%);
+      color: #7a5c00;
+    }
+    .today-summary .pill.unknown {
+      background: linear-gradient(135deg, #ffeb9c 0%, #ffe08a 100%);
+      color: #7a5c00;
+    }
     @keyframes fadeIn {
       from {
         opacity: 0;
@@ -1007,6 +1056,7 @@
       </div>
       <div class="tabs-container">
         <button class="tab-button active" onclick="switchTab('filterMode')">🔍 Filter mode</button>
+        <button class="tab-button" onclick="switchTab('todayPracticeMode')">🗓️ Today practice</button>
         <button class="tab-button" onclick="switchTab('allVocabMode')">📚 All vocab mode</button>
         <button class="tab-button" onclick="switchTab('learnAndLearnMode')">📖 learn and learn</button>
       </div>
@@ -1052,6 +1102,15 @@
           <div id="dataContainerLearnAndLearnDeleted"></div>
         </div>
       </div>
+      <div id="todayPracticeMode" class="tab-content">
+        <div class="today-practice-header">
+          <div class="topic-filter-buttons">
+            <button onclick="toggleAllVocabSortOrder()" id="sortOrderBtnToday">📊 Newest → Oldest</button>
+          </div>
+          <div id="todayPracticeSummary"></div>
+        </div>
+        <div id="dataContainerTodayPractice"></div>
+      </div>
     </div>
   </div>
 
@@ -1063,6 +1122,7 @@
       document.getElementById('filterMode').classList.remove('active');
       document.getElementById('allVocabMode').classList.remove('active');
       document.getElementById('learnAndLearnMode').classList.remove('active');
+      document.getElementById('todayPracticeMode').classList.remove('active');
       
       // Remove active class from all buttons
       document.querySelectorAll('.tab-button').forEach(btn => {
@@ -1104,6 +1164,8 @@
           renderAllVocabTabs(currentData);
         } else if (tabName === 'learnAndLearnMode') {
           renderLearnAndLearnTabs(currentData);
+        } else if (tabName === 'todayPracticeMode') {
+          renderTodayPracticeTab(currentData);
         }
       }
     }
@@ -1625,18 +1687,22 @@
       // Update button text
       const btn = document.getElementById('sortOrderBtn');
       const btnLearn = document.getElementById('sortOrderBtnLearn');
+      const btnToday = document.getElementById('sortOrderBtnToday');
       if (allVocabReverseOrder) {
         if (btn) btn.textContent = '📊 Oldest → Newest';
         if (btnLearn) btnLearn.textContent = '📊 Oldest → Newest';
+        if (btnToday) btnToday.textContent = '📊 Oldest → Newest';
       } else {
         if (btn) btn.textContent = '📊 Newest → Oldest';
         if (btnLearn) btnLearn.textContent = '📊 Newest → Oldest';
+        if (btnToday) btnToday.textContent = '📊 Newest → Oldest';
       }
       
       // Re-render All vocab mode with the new sort order
       if (currentData) {
         renderAllVocabTabs(currentData);
         renderLearnAndLearnTabs(currentData);
+        renderTodayPracticeTab(currentData);
       }
     }
 
@@ -1718,6 +1784,22 @@
       }
       if (deletedContainer) {
         deletedContainer.innerHTML = renderLearnAndLearnTables(data, allVocabReverseOrder, false, true);
+      }
+    }
+
+    function getTodayPracticeDayValue() {
+      const day = new Date().getDay();
+      return day === 0 ? 8 : day + 1;
+    }
+
+    function renderTodayPracticeTab(data) {
+      const container = document.getElementById('dataContainerTodayPractice');
+      const summaryContainer = document.getElementById('todayPracticeSummary');
+      if (!container) return;
+      const result = renderTodayPracticeTables(data, allVocabReverseOrder);
+      container.innerHTML = result.tableHtml;
+      if (summaryContainer) {
+        summaryContainer.innerHTML = result.summaryHtml || '';
       }
     }
 
@@ -1982,12 +2064,14 @@
         const containerLearn = document.getElementById('dataContainerLearnAndLearn');
         const containerLearnMarked = document.getElementById('dataContainerLearnAndLearnMarked');
         const containerLearnDeleted = document.getElementById('dataContainerLearnAndLearnDeleted');
+        const containerToday = document.getElementById('dataContainerTodayPractice');
         const authMsg = '<div class="info" style="padding: 30px; text-align: center;"><p style="font-size: 18px; color: #856404; margin-bottom: 15px;">🔒 Authentication Required</p><p style="color: #666; margin-bottom: 20px;">Please authenticate to load worksheets and view your vocabulary data.</p><a href="/auth.html" style="display: inline-block; background: #0078d4; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-weight: 600;">Authenticate Now</a></div>';
         if (containerFilter) containerFilter.innerHTML = authMsg;
         if (containerAll) containerAll.innerHTML = authMsg;
         if (containerLearn) containerLearn.innerHTML = authMsg;
         if (containerLearnMarked) containerLearnMarked.innerHTML = authMsg;
         if (containerLearnDeleted) containerLearnDeleted.innerHTML = authMsg;
+        if (containerToday) containerToday.innerHTML = authMsg;
       }
     }
     
@@ -2065,6 +2149,7 @@
       const containerLearn = document.getElementById('dataContainerLearnAndLearn');
       const containerLearnMarked = document.getElementById('dataContainerLearnAndLearnMarked');
       const containerLearnDeleted = document.getElementById('dataContainerLearnAndLearnDeleted');
+      const containerToday = document.getElementById('dataContainerTodayPractice');
       const cacheInfoDiv = document.getElementById('cacheInfo');
       const worksheetSelect = document.getElementById('worksheetSelect');
       
@@ -2089,6 +2174,9 @@
           }
           if (containerLearnDeleted) {
             containerLearnDeleted.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+          }
+          if (containerToday) {
+            containerToday.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
           }
         }
         // If no options available, the auth message from loadWorksheetsFromCache will be shown
@@ -2119,6 +2207,9 @@
         if (containerLearnDeleted) {
           containerLearnDeleted.innerHTML = '<div class="loading">Refreshing data...</div>';
         }
+        if (containerToday) {
+          containerToday.innerHTML = '<div class="loading">Refreshing data...</div>';
+        }
         cacheInfoDiv.innerHTML = '';
         showNotification('🛜 Fetching fresh data from OneDrive...', 'info', 3000);
       }
@@ -2148,6 +2239,7 @@
               if (containerLearn) containerLearn.innerHTML = errorMsg;
               if (containerLearnMarked) containerLearnMarked.innerHTML = errorMsg;
               if (containerLearnDeleted) containerLearnDeleted.innerHTML = errorMsg;
+              if (containerToday) containerToday.innerHTML = errorMsg;
               if (forceRefresh) {
                 showAuthWarning('🔐 <strong>Authentication Required!</strong> To refresh data from OneDrive, you need to authenticate first. <a class="auth-button" href="/auth.html">Authenticate Now</a>');
                 showNotification('❌ Authentication required for refresh', 'error', 4000);
@@ -2162,6 +2254,7 @@
               if (containerLearn) containerLearn.innerHTML = errorMsg;
               if (containerLearnMarked) containerLearnMarked.innerHTML = errorMsg;
               if (containerLearnDeleted) containerLearnDeleted.innerHTML = errorMsg;
+              if (containerToday) containerToday.innerHTML = errorMsg;
               if (forceRefresh) showNotification(`❌ Error: ${data.error}`, 'error', 4000);
               else if (isRequestingSpecificSheet) showNotification(`❌ Failed to load "${sheetName}": ${data.error}`, 'error', 4000);
             }
@@ -2235,6 +2328,7 @@
           }
           renderAllVocabTabs(data);
           renderLearnAndLearnTabs(data);
+          renderTodayPracticeTab(data);
         }
       } catch (err) {
         console.error('Failed to load sheet data:', err);
@@ -2246,6 +2340,7 @@
           if (containerLearn) containerLearn.innerHTML = errorMsg;
           if (containerLearnMarked) containerLearnMarked.innerHTML = errorMsg;
           if (containerLearnDeleted) containerLearnDeleted.innerHTML = errorMsg;
+          if (containerToday) containerToday.innerHTML = errorMsg;
           clearStats();
         }
         if (forceRefresh) {
@@ -2571,6 +2666,135 @@
       }
 
       return html;
+    }
+
+    // Render tables for Today practice mode (filter by day of week)
+    function renderTodayPracticeTables(data, reverseOrder = false) {
+      let html = '';
+      let hasAnyRows = false;
+      const todayValue = getTodayPracticeDayValue();
+      const stats = {
+        total: 0,
+        n: 0,
+        y: 0,
+        ok: 0,
+        unknown: 0
+      };
+
+      if (data.worksheets && data.worksheets.length > 0) {
+        data.worksheets.forEach(worksheet => {
+          if (worksheet.topics && worksheet.topics.length > 0) {
+            let topicsToRender = [...worksheet.topics];
+            if (reverseOrder) {
+              topicsToRender.reverse();
+            }
+
+            topicsToRender.forEach(topic => {
+              const words = topic.words || [];
+              const filteredWords = words.filter(word => {
+                const dayValue = parseInt(word.dayOfWeek, 10);
+                return dayValue === todayValue;
+              });
+
+              filteredWords.forEach(word => {
+                stats.total += 1;
+                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                if (flagValue === 'n') stats.n += 1;
+                else if (flagValue === 'y') stats.y += 1;
+                else if (flagValue === 'ok') stats.ok += 1;
+                else if (flagValue === '?') stats.unknown += 1;
+              });
+
+              if (filteredWords.length === 0) {
+                return;
+              }
+
+              hasAnyRows = true;
+              html += `<h3>📚 ${escapeHtml(topic.name)}</h3>`;
+
+              if (topic.statistics) {
+                html += `<div>📈 Statistics 🆕 New: ${topic.statistics.byFlag.new} | ✅ Known: ${topic.statistics.byFlag.known} | ❓ Forgotten: ${topic.statistics.byFlag.forgotten} | 👍 Learned: ${topic.statistics.byFlag.learned}</div>`;
+              }
+
+              html += `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Flag</th>
+                      <th>Word</th>
+                      <th>POS</th>
+                      <th>Pronunciation</th>
+                      <th>Meaning (VI)</th>
+                      <th>Example</th>
+                      <th>Synonyms</th>
+                      <th>Day</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+              `;
+
+              filteredWords.forEach((word, idx) => {
+                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                let bgColor = '';
+
+                if (flagValue === 'n') {
+                  bgColor = '#fcdcdf';
+                } else if (flagValue === 'y') {
+                  bgColor = '#c6e0b4';
+                } else if (flagValue === 'ok') {
+                  bgColor = '#fff2cc';
+                } else if (flagValue === '?') {
+                  bgColor = '#ffeb9c';
+                }
+
+                const tdStyle = bgColor ? `background-color: ${bgColor} !important;` : '';
+                html += `
+                  <tr>
+                    <td style="${tdStyle}">${escapeHtml(word.order || (idx + 1))}</td>
+                    <td style="text-align: center;${tdStyle}">${escapeHtml(word.flag || '')}</td>
+                    <td style="font-weight: bold;${tdStyle}">${escapeHtml(word.word)}</td>
+                    <td style="${tdStyle}"><em>${escapeHtml(word.partOfSpeech)}</em></td>
+                    <td style="${tdStyle}">${escapeHtml(word.pronunciation)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.meaning)}</td>
+                    <td style="font-style: italic;${tdStyle}">${boldWordInExample(word.word, word.exampleSentence)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.synonyms)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.dayOfWeek)}</td>
+                    <td style="${tdStyle}">${escapeHtml(formatDate(word.date))}</td>
+                  </tr>
+                `;
+              });
+
+              html += `
+                  </tbody>
+                </table>
+                <br>
+              `;
+            });
+          }
+        });
+      }
+
+      let summaryHtml = '';
+      if (hasAnyRows) {
+        summaryHtml = `
+          <div class="today-summary">
+            <span class="pill total">📊 Today (${todayValue}) Total: ${stats.total}</span>
+            <span class="pill n">🆕 N: ${stats.n}</span>
+            <span class="pill y">✅ Y: ${stats.y}</span>
+            <span class="pill ok">👍 OK: ${stats.ok}</span>
+            <span class="pill unknown">❓ ?: ${stats.unknown}</span>
+          </div>
+        `;
+      }
+
+      if (!hasAnyRows) {
+        html = '<div class="info">No words for today yet.</div>';
+        summaryHtml = '';
+      }
+
+      return { tableHtml: html, summaryHtml };
     }
 
     // Render statistics box
@@ -3053,6 +3277,7 @@
       console.log('📝 Rendered HTML length:', renderedData.length);
       if (containerAll) containerAll.innerHTML = renderedData;
       renderLearnAndLearnTabs(data);
+      renderTodayPracticeTab(data);
       
       console.log('✅ Data display completed instantly');
     }
