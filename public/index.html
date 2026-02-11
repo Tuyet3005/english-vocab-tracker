@@ -13,22 +13,78 @@
       padding: 20px;
       background: #f5f8fc;
     }
+    .back-to-top {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff77b1 0%, #ff5a95 100%);
+      color: #ffffff;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255, 90, 149, 0.35);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      z-index: 1000;
+    }
+    .back-to-top:hover {
+      box-shadow: 0 10px 28px rgba(255, 90, 149, 0.45);
+      transform: translateY(6px);
+    }
+    .back-to-top.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
     .auth-warning {
       background: #fff3cd;
       color: #856404;
-      padding: 12px 20px;
-      border-radius: 4px;
+      padding: 15px 20px;
+      border-radius: 8px;
       margin-bottom: 20px;
-      border: 1px solid #ffeaa7;
+      border: 2px solid #ffc107;
       display: none;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
     }
     .auth-warning.show {
       display: block;
+      animation: slideDown 0.3s ease-out;
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .auth-warning a {
       color: #0078d4;
       text-decoration: underline;
       cursor: pointer;
+      font-weight: 600;
+    }
+    .auth-warning .auth-button {
+      display: inline-block;
+      background: #0078d4;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-left: 10px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .auth-warning .auth-button:hover {
+      background: #106ebe;
     }
     .container {
       background: white;
@@ -425,7 +481,7 @@
       background: linear-gradient(135deg, #f93b1d 0%, #ea1e63 100%);
       color: white;
       border: none;
-      border-radius: 20px;
+      border-radius: 10px;
       cursor: pointer;
       font-weight: 600;
       font-size: 14px;
@@ -452,15 +508,38 @@
       transform: translateY(-3px);
       box-shadow: 0 6px 25px rgba(17, 153, 142, 0.4);
     }
-    /* Flag-based filters - Purple gradient */
-    .topic-filter-buttons button.btn-flags {
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      color: #333;
-      box-shadow: 0 4px 15px rgba(168, 237, 234, 0.3);
+    /* Flag-based filters - New Words (#N) - Bright Blue gradient */
+    .topic-filter-buttons button.btn-flag-n {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
     }
-    .topic-filter-buttons button.btn-flags:hover {
+    .topic-filter-buttons button.btn-flag-n:hover {
       transform: translateY(-3px);
-      box-shadow: 0 6px 25px rgba(168, 237, 234, 0.4);
+      box-shadow: 0 6px 25px rgba(79, 172, 254, 0.5);
+    }
+    /* Flag-based filters - Learned Words (#OK) - Same blue gradient */
+    .topic-filter-buttons button.btn-flag-ok {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+    .topic-filter-buttons button.btn-flag-ok:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(79, 172, 254, 0.5);
+    }
+    /* Flag-based filters - Forgotten Words (#?) - Same blue gradient */
+    .topic-filter-buttons button.btn-flag-forgotten {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    }
+    .topic-filter-buttons button.btn-flag-forgotten:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(79, 172, 254, 0.5);
     }
     /* Game mode - Orange gradient */
     .topic-filter-buttons button.btn-game {
@@ -867,9 +946,9 @@
           <button class="btn-topic" onclick="filterBy5NewestTopics()">📚 5 Newest Topics</button>
           <button class="btn-words" onclick="filter30NewestWords()">⭐ 30 Newest Words</button>
           <button class="btn-words" onclick="filterRandomNewWords()">🎲 10 Random New Words</button>
-          <button class="btn-flags" onclick="filterByFlagN()">🆕 New Words (N)</button>
-          <button class="btn-flags" onclick="filterByFlagOK()">👍 Learned Words (OK)</button>
-          <button class="btn-flags" onclick="filterByFlagForgotten()">❓ Forgotten Words (?)</button>
+          <button class="btn-flag-n" onclick="filterByFlagN()">✖️ #N</button>
+          <button class="btn-flag-ok" onclick="filterByFlagOK()">✔️ #OK</button>
+          <button class="btn-flag-forgotten" onclick="filterByFlagForgotten()">❓#?</button>
           <button class="btn-game" onclick="startGameMode()">🎮 Play Game</button>
           <button onclick="clearFilter()" id="clearFilterBtn" style="display: none; background: #666;">Clear Filter</button>
           <span id="filterStatus"></span>
@@ -887,6 +966,7 @@
     </div>
   </div>
 
+  <button id="backToTop" class="back-to-top" type="button" aria-label="Back to top">Top</button>
   <script>
     // Tab switching functionality
     function switchTab(tabName) {
@@ -1007,7 +1087,7 @@
               ⬅️ Previous Word
             </button>
             <span style="font-weight: bold; background: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 8px; font-size: 14px;">
-              Word ${currentWordIndex + 1} of ${gameWords.length}
+              Word ${currentWordIndex + 1}/${gameWords.length}
             </span>
             <button onclick="nextGameWord()" 
                     style="background: #e1fcea; color: #2a511d; border: none; padding: 12px 24px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; ${currentWordIndex === gameWords.length - 1 ? 'opacity: 0.4; cursor: not-allowed;' : ''}"
@@ -1473,8 +1553,14 @@
     }
 
     // Show authentication warning
-    function showAuthWarning() {
-      document.getElementById('authWarning').classList.add('show');
+    function showAuthWarning(customMessage = null) {
+      const authWarning = document.getElementById('authWarning');
+      if (customMessage) {
+        authWarning.innerHTML = customMessage;
+      } else {
+        authWarning.innerHTML = '⚠️ Authentication expired or not completed. <a onclick="window.location.href=\'/auth.html\'">Click here to authenticate</a>. You can still view cached data below.';
+      }
+      authWarning.classList.add('show');
     }
 
     // Hide authentication warning
@@ -1606,6 +1692,74 @@
       }
     }
     
+    // Helper function to populate worksheet dropdown
+    function populateWorksheetDropdown(worksheetNames, isFromCache = false) {
+      const select = document.getElementById('worksheetSelect');
+      
+      // Clear existing options and enable dropdown
+      select.innerHTML = '<option value="">Choose worksheet...</option>';
+      select.disabled = false;
+      
+      // Add worksheet options
+      worksheetNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+      
+      // Set up change handler
+      select.onchange = function() {
+        if (this.value) {
+          handleWorksheetSelection(this.value);
+        }
+      };
+      
+      // Auto-select first worksheet if available
+      if (worksheetNames.length > 0 && !isFromCache) {
+        select.selectedIndex = 1; // Select first worksheet (index 1, since 0 is placeholder)
+        handleWorksheetSelection(worksheetNames[0]);
+      }
+    }
+    
+    // Load worksheets from localStorage cache
+    function loadWorksheetsFromCache(errorMessage) {
+      const select = document.getElementById('worksheetSelect');
+      const cachedNames = localStorage.getItem('worksheetNames');
+      const cachedAt = localStorage.getItem('worksheetsCachedAt');
+      
+      if (cachedNames) {
+        try {
+          const worksheetNames = JSON.parse(cachedNames);
+          populateWorksheetDropdown(worksheetNames, true);
+          
+          const cacheDate = cachedAt ? new Date(cachedAt).toLocaleDateString() : 'unknown';
+          showNotification(`📦 Using cached worksheets (${cacheDate}). ${errorMessage ? 'Note: ' + errorMessage : ''}`, 'warning', 5000);
+          console.log('Loaded worksheets from cache:', worksheetNames);
+        } catch (e) {
+          console.error('Failed to parse cached worksheets:', e);
+          select.innerHTML = '<option value="">Error loading worksheets</option>';
+          select.disabled = true;
+          showNotification(`❌ ${errorMessage || 'Failed to load worksheets'}`, 'error', 4000);
+        }
+      } else {
+        // No cache available - show auth requirement
+        select.innerHTML = '<option value="">No worksheets available</option>';
+        select.disabled = true;
+        
+        // Show auth warning and clear data containers
+        showAuthWarning('🔐 <strong>Authentication Required!</strong> To load worksheets from OneDrive, please authenticate first. <a class="auth-button" href="/auth.html">Authenticate Now</a>');
+        showNotification(`❌ ${errorMessage || 'Failed to load worksheets'}`, 'error', 4000);
+        
+        // Update data containers with auth message
+        const containerFilter = document.getElementById('dataContainerFilterMode');
+        const containerAll = document.getElementById('dataContainerAllVocab');
+        const authMsg = '<div class="info" style="padding: 30px; text-align: center;"><p style="font-size: 18px; color: #856404; margin-bottom: 15px;">🔒 Authentication Required</p><p style="color: #666; margin-bottom: 20px;">Please authenticate to load worksheets and view your vocabulary data.</p><a href="/auth.html" style="display: inline-block; background: #0078d4; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-weight: 600;">Authenticate Now</a></div>';
+        if (containerFilter) containerFilter.innerHTML = authMsg;
+        if (containerAll) containerAll.innerHTML = authMsg;
+      }
+    }
+    
     // Load worksheets list and populate dropdown
     async function loadWorksheets() {
       const select = document.getElementById('worksheetSelect');
@@ -1617,22 +1771,21 @@
         const data = await response.json();
         
         if (response.ok) {
-          // Clear existing options and enable dropdown
-          select.innerHTML = '<option value="">Choose worksheet...</option>';
-          select.disabled = false;
-          
           // Filter worksheets to only show those starting with 'vocab' (case-insensitive)
           const vocabWorksheets = data.worksheets.filter(worksheet => 
             worksheet.name.toLowerCase().startsWith('vocab')
           );
           
-          // Add filtered worksheet options
-          vocabWorksheets.forEach(worksheet => {
-            const option = document.createElement('option');
-            option.value = worksheet.name;
-            option.textContent = worksheet.name;
-            select.appendChild(option);
-          });
+          const worksheetNames = vocabWorksheets.map(w => w.name);
+          
+          // Save to localStorage cache
+          if (worksheetNames.length > 0) {
+            localStorage.setItem('worksheetNames', JSON.stringify(worksheetNames));
+            localStorage.setItem('worksheetsCachedAt', new Date().toISOString());
+          }
+          
+          // Populate dropdown using helper function
+          populateWorksheetDropdown(worksheetNames, false);
           
           // Show appropriate success message based on cache status
           if (data._cached) {
@@ -1647,33 +1800,14 @@
           if (data.worksheets.length > vocabWorksheets.length) {
             console.log(`Filtered ${data.worksheets.length - vocabWorksheets.length} non-vocab worksheets`);
           }
-          
-          // Set up change handler
-          select.onchange = function() {
-            if (this.value) {
-              handleWorksheetSelection(this.value);
-            }
-          };
-          
-          // Auto-select first worksheet if available
-          if (vocabWorksheets.length > 0) {
-            select.selectedIndex = 1; // Select first worksheet (index 1, since 0 is placeholder)
-            handleWorksheetSelection(vocabWorksheets[0].name);
-          }
         } else {
-          // Show error and disable dropdown
-          console.error('Error fetching worksheets:', data.error);
-          showNotification(`❌ ${data.error}`, 'error', 4000);
-          
-          select.innerHTML = '<option value="">Error loading worksheets</option>';
-          select.disabled = true;
+          // Try to load from localStorage cache
+          loadWorksheetsFromCache(data.error);
         }
       } catch (err) {
         console.error('Failed to load worksheets:', err);
-        showNotification('❌ Failed to load worksheets', 'error', 3000);
-        
-        select.innerHTML = '<option value="">Failed to load worksheets</option>';
-        select.disabled = true;
+        // Try to load from localStorage cache
+        loadWorksheetsFromCache(err.message);
       } finally {
         hideLoading();
       }
@@ -1708,8 +1842,13 @@
       // Don't show data when no sheet is selected
       if (!sheetName || !sheetName.trim()) {
         console.log('⚠️ No sheet selected, clearing data');
-        containerFilter.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
-        containerAll.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+        // Check if dropdown has any options before showing "select" message
+        const hasOptions = worksheetSelect && worksheetSelect.options.length > 1;
+        if (hasOptions) {
+          containerFilter.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+          containerAll.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+        }
+        // If no options available, the auth message from loadWorksheetsFromCache will be shown
         cacheInfoDiv.innerHTML = '';
         clearStats();
         return;
@@ -1754,10 +1893,11 @@
               const errorMsg = `<div class="error">${errorMessage} <a href="/auth.html">Authenticate now</a></div>`;
               containerFilter.innerHTML = errorMsg;
               containerAll.innerHTML = errorMsg;
-              showAuthWarning();
               if (forceRefresh) {
+                showAuthWarning('🔐 <strong>Authentication Required!</strong> To refresh data from OneDrive, you need to authenticate first. <a class="auth-button" href="/auth.html">Authenticate Now</a>');
                 showNotification('❌ Authentication required for refresh', 'error', 4000);
               } else if (isRequestingSpecificSheet) {
+                showAuthWarning(`🔐 <strong>Authentication Required!</strong> To load "${sheetName}" from OneDrive, you need to authenticate first. <a class="auth-button" href="/auth.html">Authenticate Now</a>`);
                 showNotification(`❌ Authentication required to load "${sheetName}"`, 'error', 4000);
               }
             } else {
@@ -2167,6 +2307,7 @@
       // Use original word order (no sorting)
       const wordsToRender = topic.words || [];
 
+      const totalWords = wordsToRender.length;
       wordsToRender.forEach((word, idx) => {
         const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
         let flagClass = '';
@@ -2191,7 +2332,7 @@
 
         html += `
           <div class="word-card flag-${flagClass}">
-            <div class="card-number">${idx + 1}</div>
+            <div class="card-number">${idx + 1}/${totalWords}</div>
             ${flagText ? `<div class="card-flag ${flagClass}">${escapeHtml(flagText)}</div>` : ''}
             <div class="word-main">
               <div class="word-english">${escapeHtml(word.word)}</div>
@@ -2215,16 +2356,13 @@
       return html;
     }
 
-    // Render a single topic with card layout for vocabulary words (sorted alphabetically)
+    // Render a single topic with card layout for vocabulary words (original sheet order)
     function renderTopicAsCards(topic) {
       let html = `<div class="word-cards-container">`;
 
-      // Sort words alphabetically for better organization
-      const sortedWords = topic.words ? [...topic.words].sort((a, b) => {
-        return a.word.localeCompare(b.word, 'en', { sensitivity: 'base' });
-      }) : [];
-
-      sortedWords.forEach((word, idx) => {
+      const wordsToRender = topic.words || [];
+      const totalWords = wordsToRender.length;
+      wordsToRender.forEach((word, idx) => {
         const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
         let flagClass = '';
         let flagText = '';
@@ -2248,7 +2386,7 @@
 
         html += `
           <div class="word-card flag-${flagClass}">
-            <div class="card-number">${idx + 1}</div>
+            <div class="card-number">${idx + 1}/${totalWords}</div>
             ${flagText ? `<div class="card-flag ${flagClass}">${escapeHtml(flagText)}</div>` : ''}
             <div class="word-main">
               <div class="word-english">${escapeHtml(word.word)}</div>
@@ -2313,11 +2451,18 @@
       // Escape the example sentence first
       let escaped = escapeHtml(exampleSentence);
       
-      // Create a regex to find the word (case-insensitive, whole words only)
-      const regex = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+      // Remove special characters from word for searching (but keep the original for display)
+      // Strip characters like '-', '>', '→', '/', etc. that might be in vocabulary entries
+      const cleanedWord = word.replace(/[-→>\/\\|]/g, ' ').trim();
       
-      // Replace occurrences with bold black version
-      escaped = escaped.replace(regex, '<strong style="color: black;">$1</strong>');
+      // Split the cleaned word into individual words to search for each
+      const wordsToSearch = cleanedWord.split(/\s+/).filter(w => w.length > 0);
+      
+      // Search and bold each word part in the example
+      wordsToSearch.forEach(searchWord => {
+        const regex = new RegExp(`\\b(${searchWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+        escaped = escaped.replace(regex, '<strong style="color: black;">$1</strong>');
+      });
       
       return escaped;
     }
@@ -2433,6 +2578,21 @@
       if (statsSummary) {
         statsSummary.style.display = 'none';
       }
+    }
+
+    const backToTopButton = document.getElementById('backToTop');
+
+    function updateBackToTopVisibility() {
+      if (!backToTopButton) return;
+      backToTopButton.classList.toggle('show', window.scrollY > 300);
+    }
+
+    if (backToTopButton) {
+      backToTopButton.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+      updateBackToTopVisibility();
     }
 
     // Initialize page - display cached data immediately if available

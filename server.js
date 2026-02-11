@@ -197,6 +197,47 @@ async function getCachedData(sheetUrl, sheetName = '') {
   return null;
 }
 
+async function getCachedWorksheetList(sheetUrl) {
+  const cache = await loadCache();
+  if (!cache || !cache[sheetUrl]) return null;
+
+  const sheetEntries = cache[sheetUrl];
+  const sheetKeys = Object.keys(sheetEntries);
+  if (sheetKeys.length === 0) return null;
+
+  const worksheetNames = new Set();
+  let latestTimestamp = null;
+
+  sheetKeys.forEach((name) => {
+    const entry = sheetEntries[name];
+    if (entry && entry.timestamp) {
+      if (!latestTimestamp || entry.timestamp > latestTimestamp) {
+        latestTimestamp = entry.timestamp;
+      }
+    }
+
+    let displayName = name;
+    if (name === 'default') {
+      const fallback = (serverState.sheetName || '').split(',')[0].trim();
+      displayName = fallback || '';
+    }
+
+    if (displayName) {
+      worksheetNames.add(displayName);
+    }
+  });
+
+  if (worksheetNames.size === 0) return null;
+
+  return {
+    fileName: 'Cached workbook',
+    worksheets: Array.from(worksheetNames).map(name => ({ name })),
+    sheetUrl,
+    _cached: true,
+    _cachedAt: latestTimestamp
+  };
+}
+
 // Clear cache for specific URL
 async function clearCacheForUrl(sheetUrl) {
   try {
@@ -602,6 +643,12 @@ app.get('/api/sheet/worksheets', async (req, res) => {
         _cached: true,
         _cachedAt: cachedMetadata.timestamp
       });
+    }
+
+    const cachedWorksheetList = await getCachedWorksheetList(serverState.sheetUrl);
+    if (cachedWorksheetList) {
+      console.log('Returning worksheet list from data cache');
+      return res.json(cachedWorksheetList);
     }
 
     if (!isAuthenticated()) {
