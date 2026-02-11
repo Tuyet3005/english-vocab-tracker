@@ -17,6 +17,7 @@ const STATE_KEY = 'server-state.json';
 const CACHE_KEY = 'sheet-data-cache.json';
 const STATS_CACHE_KEY = 'sheet-stats-cache.json';
 const METADATA_CACHE_KEY = 'sheet-metadata-cache.json';
+const WORD_STATUS_KEY = 'word-status.json';
 
 // IMPORTANT: This data is now stored in TigrisData cloud storage.
 // NEVER expose authentication tokens and credentials to the frontend.
@@ -26,6 +27,7 @@ const STATE_FILE = path.join(__dirname, 'server-state.json');
 const CACHE_FILE = path.join(__dirname, 'sheet-data-cache.json');
 const STATS_CACHE_FILE = path.join(__dirname, 'sheet-stats-cache.json');
 const METADATA_CACHE_FILE = path.join(__dirname, 'sheet-metadata-cache.json');
+const WORD_STATUS_FILE = path.join(__dirname, 'word-status.json');
 
 // Middleware
 app.use(express.json());
@@ -119,6 +121,37 @@ async function saveState(state) {
     console.log('State saved to Tigris storage');
   } catch (err) {
     console.error('Error saving state to Tigris:', err.message);
+  }
+}
+
+async function loadWordStatus() {
+  try {
+    if (!fs.existsSync(WORD_STATUS_FILE)) {
+      return { marked: [], deleted: [] };
+    }
+    const raw = fs.readFileSync(WORD_STATUS_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return {
+      marked: Array.isArray(parsed.marked) ? parsed.marked : [],
+      deleted: Array.isArray(parsed.deleted) ? parsed.deleted : []
+    };
+  } catch (err) {
+    console.error('Error loading word status:', err.message);
+    return { marked: [], deleted: [] };
+  }
+}
+
+async function saveWordStatus(payload) {
+  try {
+    const safePayload = {
+      marked: Array.isArray(payload.marked) ? payload.marked : [],
+      deleted: Array.isArray(payload.deleted) ? payload.deleted : []
+    };
+    fs.writeFileSync(WORD_STATUS_FILE, JSON.stringify(safePayload, null, 2));
+    return safePayload;
+  } catch (err) {
+    console.error('Error saving word status:', err.message);
+    throw err;
   }
 }
 
@@ -523,6 +556,26 @@ app.get('/api/auth/status', (req, res) => {
     userCode: serverState.userCode,
     verificationUri: serverState.verificationUri
   });
+});
+
+// Get saved word status for Learn and Learn mode
+app.get('/api/word-status', async (req, res) => {
+  try {
+    const status = await loadWordStatus();
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Save word status for Learn and Learn mode
+app.post('/api/word-status', async (req, res) => {
+  try {
+    const saved = await saveWordStatus(req.body || {});
+    res.json({ success: true, ...saved });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Start authentication process
