@@ -17,7 +17,6 @@ const STATE_KEY = 'server-state.json';
 const CACHE_KEY = 'sheet-data-cache.json';
 const STATS_CACHE_KEY = 'sheet-stats-cache.json';
 const METADATA_CACHE_KEY = 'sheet-metadata-cache.json';
-const WORD_STATUS_KEY = 'word-status.json';
 
 // IMPORTANT: This data is now stored in TigrisData cloud storage.
 // NEVER expose authentication tokens and credentials to the frontend.
@@ -27,7 +26,7 @@ const STATE_FILE = path.join(__dirname, 'server-state.json');
 const CACHE_FILE = path.join(__dirname, 'sheet-data-cache.json');
 const STATS_CACHE_FILE = path.join(__dirname, 'sheet-stats-cache.json');
 const METADATA_CACHE_FILE = path.join(__dirname, 'sheet-metadata-cache.json');
-const WORD_STATUS_FILE = path.join(__dirname, 'word-status.json');
+const E100_CLICKS_FILE = path.join(__dirname, 'E100.json');
 
 // Middleware
 app.use(express.json());
@@ -124,33 +123,36 @@ async function saveState(state) {
   }
 }
 
-async function loadWordStatus() {
+async function loadE100Progress() {
   try {
-    if (!fs.existsSync(WORD_STATUS_FILE)) {
-      return { marked: [], deleted: [] };
+    if (!fs.existsSync(E100_CLICKS_FILE)) {
+      return {};
     }
-    const raw = fs.readFileSync(WORD_STATUS_FILE, 'utf8');
+    const raw = fs.readFileSync(E100_CLICKS_FILE, 'utf8');
     const parsed = JSON.parse(raw);
-    return {
-      marked: Array.isArray(parsed.marked) ? parsed.marked : [],
-      deleted: Array.isArray(parsed.deleted) ? parsed.deleted : []
-    };
+    if (parsed && typeof parsed.doneCounts === 'object' && parsed.doneCounts !== null) {
+      return parsed.doneCounts;
+    }
+    if (parsed && typeof parsed.clicks === 'object' && parsed.clicks !== null) {
+      return parsed.clicks;
+    }
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+    return {};
   } catch (err) {
-    console.error('Error loading word status:', err.message);
-    return { marked: [], deleted: [] };
+    console.error('Error loading E100 progress:', err.message);
+    return {};
   }
 }
 
-async function saveWordStatus(payload) {
+async function saveE100Progress(doneCounts) {
   try {
-    const safePayload = {
-      marked: Array.isArray(payload.marked) ? payload.marked : [],
-      deleted: Array.isArray(payload.deleted) ? payload.deleted : []
-    };
-    fs.writeFileSync(WORD_STATUS_FILE, JSON.stringify(safePayload, null, 2));
-    return safePayload;
+    const safeDoneCounts = doneCounts && typeof doneCounts === 'object' ? doneCounts : {};
+    fs.writeFileSync(E100_CLICKS_FILE, JSON.stringify({ doneCounts: safeDoneCounts }, null, 2));
+    return safeDoneCounts;
   } catch (err) {
-    console.error('Error saving word status:', err.message);
+    console.error('Error saving E100 progress:', err.message);
     throw err;
   }
 }
@@ -558,21 +560,22 @@ app.get('/api/auth/status', (req, res) => {
   });
 });
 
-// Get saved word status for Learn and Learn mode
-app.get('/api/word-status', async (req, res) => {
+// Get saved E100 completion counts
+app.get('/api/e100-progress', async (req, res) => {
   try {
-    const status = await loadWordStatus();
-    res.json(status);
+    const doneCounts = await loadE100Progress();
+    res.json({ doneCounts });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Save word status for Learn and Learn mode
-app.post('/api/word-status', async (req, res) => {
+// Save E100 completion counts
+app.post('/api/e100-progress', async (req, res) => {
   try {
-    const saved = await saveWordStatus(req.body || {});
-    res.json({ success: true, ...saved });
+    const doneCounts = req.body && typeof req.body.doneCounts === 'object' ? req.body.doneCounts : {};
+    const saved = await saveE100Progress(doneCounts);
+    res.json({ success: true, doneCounts: saved });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

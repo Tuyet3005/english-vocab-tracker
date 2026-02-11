@@ -397,36 +397,6 @@
     .tab-content.active {
       display: block;
     }
-    .learn-tabs {
-      margin: 16px 0 12px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .learn-tab-button {
-      padding: 8px 18px;
-      background: #ffffff;
-      border: 2px solid #e0e0e0;
-      cursor: pointer;
-      font-weight: 600;
-      color: #555;
-      border-radius: 10px;
-      transition: all 0.2s ease;
-      font-size: 13px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-    .learn-tab-button.active {
-      background: linear-gradient(135deg, #f5c2ef 0%, #f0a8e8 100%);
-      color: #333;
-      border-color: transparent;
-      box-shadow: 0 6px 16px rgba(245, 194, 239, 0.35);
-    }
-    .learn-tab-content {
-      display: none;
-    }
-    .learn-tab-content.active {
-      display: block;
-    }
     .learn-mark-checkbox {
       width: 22px;
       height: 22px;
@@ -695,6 +665,92 @@
     }
     .topic-filter-buttons button[style*="background: #666"]:hover {
       box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    }
+    .e100-chart-card {
+      margin-bottom: 16px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(102, 126, 234, 0.15);
+      background: linear-gradient(135deg, #ffffff 0%, #f6f8ff 100%);
+      box-shadow: 0 8px 20px rgba(64, 93, 230, 0.08);
+    }
+    .e100-chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .e100-reset-button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(43, 58, 85, 0.2);
+      background: #ffffff;
+      color: #2b3a55;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 12px rgba(43, 58, 85, 0.08);
+    }
+    .e100-reset-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 16px rgba(43, 58, 85, 0.12);
+    }
+    .e100-chart-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2b3a55;
+    }
+    .e100-chart-subtitle {
+      font-size: 12px;
+      color: #607089;
+    }
+    #e100ClickChart {
+      width: 100%;
+      height: 220px;
+      display: block;
+    }
+    .e100-chart-legend {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .e100-chart-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(43, 58, 85, 0.12);
+      background: #ffffff;
+      font-size: 12px;
+      color: #3d4c63;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .e100-chart-pill span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .e100-done-button {
+      margin-top: 14px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8ce0c0 0%, #4facfe 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(79, 172, 254, 0.25);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .e100-done-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px rgba(79, 172, 254, 0.35);
     }
     .notification {
       position: fixed;
@@ -1055,12 +1111,12 @@
         </div>
       </div>
       <div class="tabs-container">
-        <button class="tab-button active" onclick="switchTab('filterMode')">🔍 Filter mode</button>
-        <button class="tab-button" onclick="switchTab('todayPracticeMode')">🗓️ Today practice</button>
-        <button class="tab-button" onclick="switchTab('allVocabMode')">📚 All vocab mode</button>
-        <button class="tab-button" onclick="switchTab('learnAndLearnMode')">📖 learn and learn</button>
+        <button class="tab-button" onclick="switchTab('filterMode')">🔍 Filter</button>
+        <button class="tab-button active" onclick="switchTab('todayPracticeMode')">🗓️ Todays</button>
+        <button class="tab-button" onclick="switchTab('e100Mode')">🧩 E100</button>
+        <button class="tab-button" onclick="switchTab('allVocabMode')">📚 All</button>
       </div>
-      <div id="filterMode" class="tab-content active">
+      <div id="filterMode" class="tab-content">
         <div class="topic-filter-buttons">
           <button class="btn-topic" onclick="filterByNewestTopic()">📍 Newest Topic</button>
           <button class="btn-topic" onclick="filterBy5NewestTopics()">📚 5 Newest Topics</button>
@@ -1083,26 +1139,7 @@
         </div>
         <div id="dataContainerAllVocab"></div>
       </div>
-      <div id="learnAndLearnMode" class="tab-content">
-        <div class="topic-filter-buttons">
-          <button onclick="toggleAllVocabSortOrder()" id="sortOrderBtnLearn">📊 Newest → Oldest</button>
-        </div>
-        <div class="learn-tabs">
-          <button class="learn-tab-button active" onclick="switchLearnTab('learnAll')">📋 All</button>
-          <button class="learn-tab-button" onclick="switchLearnTab('learnMarked')">✅ Marked</button>
-          <button class="learn-tab-button" onclick="switchLearnTab('learnDeleted')">🗑️ Deleted</button>
-        </div>
-        <div id="learnAll" class="learn-tab-content active">
-          <div id="dataContainerLearnAndLearn"></div>
-        </div>
-        <div id="learnMarked" class="learn-tab-content">
-          <div id="dataContainerLearnAndLearnMarked"></div>
-        </div>
-        <div id="learnDeleted" class="learn-tab-content">
-          <div id="dataContainerLearnAndLearnDeleted"></div>
-        </div>
-      </div>
-      <div id="todayPracticeMode" class="tab-content">
+      <div id="todayPracticeMode" class="tab-content active">
         <div class="today-practice-header">
           <div class="topic-filter-buttons">
             <button onclick="toggleAllVocabSortOrder()" id="sortOrderBtnToday">📊 Newest → Oldest</button>
@@ -1110,6 +1147,21 @@
           <div id="todayPracticeSummary"></div>
         </div>
         <div id="dataContainerTodayPractice"></div>
+      </div>
+      <div id="e100Mode" class="tab-content">
+        <div class="e100-chart-card">
+          <div class="e100-chart-header">
+            <div>
+              <div class="e100-chart-title">Bạn đã ôn luyện như thế nào? 📅</div>
+              <div class="e100-chart-subtitle">Tracks how many times each 100-word list is completed</div>
+            </div>
+            <button class="e100-reset-button" type="button" onclick="resetE100Chart()">Reset chart</button>
+          </div>
+          <canvas id="e100ClickChart"></canvas>
+          <div class="e100-chart-legend" id="e100ChartLegend"></div>
+        </div>
+        <div class="topic-filter-buttons" id="e100Buttons"></div>
+        <div id="dataContainerE100"></div>
       </div>
     </div>
   </div>
@@ -1121,8 +1173,8 @@
       // Hide all tabs
       document.getElementById('filterMode').classList.remove('active');
       document.getElementById('allVocabMode').classList.remove('active');
-      document.getElementById('learnAndLearnMode').classList.remove('active');
       document.getElementById('todayPracticeMode').classList.remove('active');
+      document.getElementById('e100Mode').classList.remove('active');
       
       // Remove active class from all buttons
       document.querySelectorAll('.tab-button').forEach(btn => {
@@ -1162,10 +1214,10 @@
           }
         } else if (tabName === 'allVocabMode') {
           renderAllVocabTabs(currentData);
-        } else if (tabName === 'learnAndLearnMode') {
-          renderLearnAndLearnTabs(currentData);
         } else if (tabName === 'todayPracticeMode') {
           renderTodayPracticeTab(currentData);
+        } else if (tabName === 'e100Mode') {
+          renderE100Tab(currentData);
         }
       }
     }
@@ -1177,10 +1229,16 @@
     let gameWords = [];
     let currentWordIndex = 0;
     let allVocabReverseOrder = false;
-    let learnActiveTab = 'learnAll';
-    const learnMarkedWords = new Set();
-    const learnDeletedWords = new Set();
-    let saveWordStatusTimer = null;
+    let e100RangeStart = 1;
+    let e100CurrentRangeLabel = '';
+    const e100DoneCounts = {};
+    const e100ChartPalette = ['#ff77b1', '#6aa9ff', '#8ce0c0', '#ffd166', '#cdb4ff', '#ffa69e', '#7bdff2', '#b8f2e6', '#f7d6e0', '#c7bcf6'];
+    const e100ChartData = {
+      labels: [],
+      values: [],
+      displayValues: [],
+      animating: false
+    };
 
     // Start game mode - show one flashcard at a time with navigation
     function startGameMode() {
@@ -1683,26 +1741,23 @@
     // Toggle sort order in All vocab mode (newest → oldest or oldest → newest)
     function toggleAllVocabSortOrder() {
       allVocabReverseOrder = !allVocabReverseOrder;
-      
+
       // Update button text
       const btn = document.getElementById('sortOrderBtn');
-      const btnLearn = document.getElementById('sortOrderBtnLearn');
       const btnToday = document.getElementById('sortOrderBtnToday');
       if (allVocabReverseOrder) {
         if (btn) btn.textContent = '📊 Oldest → Newest';
-        if (btnLearn) btnLearn.textContent = '📊 Oldest → Newest';
         if (btnToday) btnToday.textContent = '📊 Oldest → Newest';
       } else {
         if (btn) btn.textContent = '📊 Newest → Oldest';
-        if (btnLearn) btnLearn.textContent = '📊 Newest → Oldest';
         if (btnToday) btnToday.textContent = '📊 Newest → Oldest';
       }
       
       // Re-render All vocab mode with the new sort order
       if (currentData) {
         renderAllVocabTabs(currentData);
-        renderLearnAndLearnTabs(currentData);
         renderTodayPracticeTab(currentData);
+        renderE100Tab(currentData);
       }
     }
 
@@ -1710,81 +1765,6 @@
       const rendered = renderAllVocabWithTopics(data, allVocabReverseOrder);
       const allContainer = document.getElementById('dataContainerAllVocab');
       if (allContainer) allContainer.innerHTML = rendered;
-    }
-
-    function switchLearnTab(tabName) {
-      document.getElementById('learnAll').classList.remove('active');
-      document.getElementById('learnMarked').classList.remove('active');
-      document.getElementById('learnDeleted').classList.remove('active');
-
-      document.querySelectorAll('.learn-tab-button').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
-      const target = document.getElementById(tabName);
-      if (target) {
-        target.classList.add('active');
-      }
-
-      if (event && event.target) {
-        event.target.classList.add('active');
-      }
-
-      learnActiveTab = tabName;
-      if (currentData) {
-        renderLearnAndLearnTabs(currentData);
-      }
-    }
-
-    function getLearnWordKey(word, topicName, worksheetName) {
-      const order = word.order || '';
-      const date = word.date || '';
-      return `${worksheetName}||${topicName}||${order}||${word.word || ''}||${date}`;
-    }
-
-    function toggleLearnMark(encodedKey, isChecked) {
-      const key = decodeURIComponent(encodedKey);
-      if (isChecked) {
-        learnMarkedWords.add(key);
-      } else {
-        learnMarkedWords.delete(key);
-      }
-
-      scheduleSaveWordStatus();
-
-      if (learnActiveTab === 'learnMarked' && currentData) {
-        renderLearnAndLearnTabs(currentData);
-      }
-    }
-
-    function toggleLearnDelete(encodedKey) {
-      const key = decodeURIComponent(encodedKey);
-      if (learnDeletedWords.has(key)) {
-        learnDeletedWords.delete(key);
-      } else {
-        learnDeletedWords.add(key);
-      }
-
-      scheduleSaveWordStatus();
-
-      if (currentData) {
-        renderLearnAndLearnTabs(currentData);
-      }
-    }
-
-    function renderLearnAndLearnTabs(data) {
-      const allContainer = document.getElementById('dataContainerLearnAndLearn');
-      const markedContainer = document.getElementById('dataContainerLearnAndLearnMarked');
-      const deletedContainer = document.getElementById('dataContainerLearnAndLearnDeleted');
-      if (allContainer) {
-        allContainer.innerHTML = renderLearnAndLearnTables(data, allVocabReverseOrder, false, false);
-      }
-      if (markedContainer) {
-        markedContainer.innerHTML = renderLearnAndLearnTables(data, allVocabReverseOrder, true, false);
-      }
-      if (deletedContainer) {
-        deletedContainer.innerHTML = renderLearnAndLearnTables(data, allVocabReverseOrder, false, true);
-      }
     }
 
     function getTodayPracticeDayValue() {
@@ -1803,48 +1783,305 @@
       }
     }
 
-    function scheduleSaveWordStatus() {
-      if (saveWordStatusTimer) {
-        clearTimeout(saveWordStatusTimer);
+    function renderE100Tab(data) {
+      const buttonsContainer = document.getElementById('e100Buttons');
+      const tableContainer = document.getElementById('dataContainerE100');
+      if (!buttonsContainer || !tableContainer) return;
+      const ranges = buildE100Ranges(data);
+      if (ranges.length === 0) {
+        buttonsContainer.innerHTML = '';
+        tableContainer.innerHTML = '<div class="info">No words available.</div>';
+        syncE100ChartLabels([]);
+        return;
       }
-      saveWordStatusTimer = setTimeout(() => {
-        saveWordStatus();
-      }, 200);
+
+      if (!ranges.find(range => range.start === e100RangeStart)) {
+        e100RangeStart = ranges[0].start;
+      }
+
+      buttonsContainer.innerHTML = ranges.map(range => {
+        const isActive = range.start === e100RangeStart;
+        return `<button class="${isActive ? 'active' : ''}" data-range-label="${range.label}" onclick="selectE100Range(${range.start}, this.dataset.rangeLabel)">${range.label}</button>`;
+      }).join('');
+
+      const activeRange = ranges.find(range => range.start === e100RangeStart) || ranges[0];
+      e100CurrentRangeLabel = activeRange ? activeRange.label : '';
+
+      const tableHtml = renderE100Table(data, e100RangeStart, e100RangeStart + 99, allVocabReverseOrder);
+      tableContainer.innerHTML = `${tableHtml}
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="e100-done-button" type="button" onclick="markE100RangeDone()">Done this list</button>
+        </div>`;
+      syncE100ChartLabels(ranges);
     }
 
-    async function loadWordStatus() {
+    function selectE100Range(start, label) {
+      e100RangeStart = start;
+      e100CurrentRangeLabel = label || '';
+      if (currentData) {
+        renderE100Tab(currentData);
+      }
+    }
+
+    function syncE100ChartLabels(ranges) {
+      const labels = ranges.map(range => range.label);
+      e100ChartData.labels = labels;
+      e100ChartData.values = labels.map(label => e100DoneCounts[label] || 0);
+      if (e100ChartData.displayValues.length !== labels.length) {
+        e100ChartData.displayValues = e100ChartData.values.slice();
+      }
+      renderE100ChartLegend();
+      drawE100Chart();
+    }
+
+    function markE100RangeDone() {
+      if (!e100CurrentRangeLabel) return;
+      
+      const userInput = prompt('This page is currently only for Khỉ :3');
+      
+      if (userInput && userInput.toLowerCase().trim() === 'ok') {
+        e100DoneCounts[e100CurrentRangeLabel] = (e100DoneCounts[e100CurrentRangeLabel] || 0) + 1;
+        e100ChartData.values = e100ChartData.labels.map(item => e100DoneCounts[item] || 0);
+        renderE100ChartLegend();
+        animateE100Chart();
+        saveE100DoneCounts();
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function loadE100DoneCounts() {
       try {
-        const response = await fetch('/api/word-status');
+        const response = await fetch('/api/e100-progress');
         if (!response.ok) {
-          return;
+          throw new Error('E100 progress request failed');
         }
         const data = await response.json();
-        learnMarkedWords.clear();
-        learnDeletedWords.clear();
-        (data.marked || []).forEach(key => learnMarkedWords.add(key));
-        (data.deleted || []).forEach(key => learnDeletedWords.add(key));
+        const counts = data && data.doneCounts && typeof data.doneCounts === 'object' ? data.doneCounts : {};
+        Object.keys(e100DoneCounts).forEach(key => delete e100DoneCounts[key]);
+        Object.entries(counts).forEach(([label, count]) => {
+          if (typeof count === 'number' && count >= 0) {
+            e100DoneCounts[label] = count;
+          }
+        });
+
+        setLocalE100DoneCounts(e100DoneCounts);
 
         if (currentData) {
-          renderLearnAndLearnTabs(currentData);
+          renderE100Tab(currentData);
+        } else {
+          renderE100ChartLegend();
+          drawE100Chart();
         }
       } catch (err) {
-        console.error('Failed to load word status:', err);
+        const fallbackCounts = getLocalE100DoneCounts();
+        Object.keys(e100DoneCounts).forEach(key => delete e100DoneCounts[key]);
+        Object.entries(fallbackCounts).forEach(([label, count]) => {
+          if (typeof count === 'number' && count >= 0) {
+            e100DoneCounts[label] = count;
+          }
+        });
+
+        if (currentData) {
+          renderE100Tab(currentData);
+        } else {
+          renderE100ChartLegend();
+          drawE100Chart();
+        }
+        console.error('Failed to load E100 done counts:', err);
       }
     }
 
-    async function saveWordStatus() {
+    async function saveE100DoneCounts() {
       try {
-        await fetch('/api/word-status', {
+        setLocalE100DoneCounts(e100DoneCounts);
+        await fetch('/api/e100-progress', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            marked: Array.from(learnMarkedWords),
-            deleted: Array.from(learnDeletedWords)
-          })
+          body: JSON.stringify({ doneCounts: e100DoneCounts })
         });
       } catch (err) {
-        console.error('Failed to save word status:', err);
+        console.error('Failed to save E100 done counts:', err);
       }
+    }
+
+    function getLocalE100DoneCounts() {
+      try {
+        const raw = localStorage.getItem('e100DoneCounts');
+        const parsed = raw ? JSON.parse(raw) : {};
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function setLocalE100DoneCounts(counts) {
+      try {
+        localStorage.setItem('e100DoneCounts', JSON.stringify(counts || {}));
+      } catch (err) {
+        console.error('Failed to cache E100 done counts locally:', err);
+      }
+    }
+
+    function resetE100Chart() {
+      const userInput = prompt('This page is currently only for Khỉ :3');
+      
+      if (!userInput || userInput.toLowerCase().trim() !== 'ok') {
+        return;
+      }
+      
+      Object.keys(e100DoneCounts).forEach(key => delete e100DoneCounts[key]);
+      e100ChartData.values = e100ChartData.labels.map(() => 0);
+      e100ChartData.displayValues = e100ChartData.values.slice();
+      renderE100ChartLegend();
+      drawE100Chart();
+      saveE100DoneCounts();
+      try {
+        localStorage.removeItem('e100DoneCounts');
+      } catch (err) {
+        console.error('Failed to clear local E100 done counts:', err);
+      }
+    }
+
+    function renderE100ChartLegend() {
+      const legend = document.getElementById('e100ChartLegend');
+      if (!legend) return;
+      if (e100ChartData.labels.length === 0) {
+        legend.innerHTML = '<span class="e100-chart-subtitle">No completions yet.</span>';
+        return;
+      }
+      legend.innerHTML = e100ChartData.labels.map((label, index) => {
+        const count = e100DoneCounts[label] || 0;
+        const color = e100ChartPalette[index % e100ChartPalette.length];
+        return `<div class="e100-chart-pill" style="color: ${color};"><span></span>${label}: ${count}</div>`;
+      }).join('');
+    }
+
+    function animateE100Chart() {
+      if (e100ChartData.animating) return;
+      e100ChartData.animating = true;
+      const step = () => {
+        let done = true;
+        e100ChartData.displayValues = e100ChartData.displayValues.map((current, index) => {
+          const target = e100ChartData.values[index] || 0;
+          const next = current + (target - current) * 0.2;
+          if (Math.abs(target - next) > 0.05) {
+            done = false;
+            return next;
+          }
+          return target;
+        });
+
+        drawE100Chart();
+        if (!done) {
+          requestAnimationFrame(step);
+        } else {
+          e100ChartData.animating = false;
+        }
+      };
+      requestAnimationFrame(step);
+    }
+
+    function drawE100Chart() {
+      const canvas = document.getElementById('e100ClickChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const pixelRatio = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth || 900;
+      const height = canvas.clientHeight || 220;
+      canvas.width = Math.round(width * pixelRatio);
+      canvas.height = Math.round(height * pixelRatio);
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const labels = e100ChartData.labels;
+      if (labels.length === 0) {
+        ctx.fillStyle = '#8a97a8';
+        ctx.font = '12px Arial, sans-serif';
+        ctx.fillText('No completions yet. Use "Done this list" below.', 12, 24);
+        return;
+      }
+
+      const values = e100ChartData.displayValues;
+      const maxValue = Math.max(1, ...values, ...e100ChartData.values);
+      const chartPadding = { top: 20, right: 12, bottom: 32, left: 36 };
+      const chartWidth = width - chartPadding.left - chartPadding.right;
+      const chartHeight = height - chartPadding.top - chartPadding.bottom;
+
+      ctx.strokeStyle = 'rgba(86, 98, 116, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(chartPadding.left, chartPadding.top);
+      ctx.lineTo(chartPadding.left, chartPadding.top + chartHeight);
+      ctx.lineTo(chartPadding.left + chartWidth, chartPadding.top + chartHeight);
+      ctx.stroke();
+
+      const gap = 10;
+      const barWidth = Math.max(18, (chartWidth - gap * (labels.length - 1)) / labels.length);
+
+      labels.forEach((label, index) => {
+        const value = values[index] || 0;
+        const barHeight = (value / maxValue) * chartHeight;
+        const x = chartPadding.left + index * (barWidth + gap);
+        const y = chartPadding.top + chartHeight - barHeight;
+        const color = e100ChartPalette[index % e100ChartPalette.length];
+
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.9;
+        ctx.fillRect(x, y, barWidth, barHeight);
+        ctx.globalAlpha = 1;
+
+        ctx.fillStyle = '#2b3a55';
+        ctx.font = '12px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(Math.round(value), x + barWidth / 2, y - 6);
+
+        const labelText = label.replace(' words', '');
+        ctx.fillStyle = '#607089';
+        ctx.font = '11px Arial, sans-serif';
+        ctx.fillText(labelText, x + barWidth / 2, chartPadding.top + chartHeight + 18);
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      drawE100Chart();
+    });
+
+    function buildE100Ranges(data) {
+      let maxOrder = 0;
+      let fallbackCount = 0;
+
+      if (data.worksheets) {
+        data.worksheets.forEach(worksheet => {
+          if (worksheet.topics) {
+            worksheet.topics.forEach(topic => {
+              if (topic.words) {
+                topic.words.forEach((word, idx) => {
+                  fallbackCount += 1;
+                  const orderValue = parseInt(word.order, 10);
+                  if (!Number.isNaN(orderValue)) {
+                    maxOrder = Math.max(maxOrder, orderValue);
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+
+      const total = maxOrder || fallbackCount;
+      if (!total) return [];
+
+      const ranges = [];
+      for (let start = 1; start <= total; start += 100) {
+        const end = Math.min(start + 99, total);
+        ranges.push({ start, end, label: `${start}-${end} words` });
+      }
+
+      return ranges;
     }
 
     // Check authentication status (returns boolean)
@@ -2061,17 +2298,13 @@
         // Update data containers with auth message
         const containerFilter = document.getElementById('dataContainerFilterMode');
         const containerAll = document.getElementById('dataContainerAllVocab');
-        const containerLearn = document.getElementById('dataContainerLearnAndLearn');
-        const containerLearnMarked = document.getElementById('dataContainerLearnAndLearnMarked');
-        const containerLearnDeleted = document.getElementById('dataContainerLearnAndLearnDeleted');
         const containerToday = document.getElementById('dataContainerTodayPractice');
+        const containerE100 = document.getElementById('dataContainerE100');
         const authMsg = '<div class="info" style="padding: 30px; text-align: center;"><p style="font-size: 18px; color: #856404; margin-bottom: 15px;">🔒 Authentication Required</p><p style="color: #666; margin-bottom: 20px;">Please authenticate to load worksheets and view your vocabulary data.</p><a href="/auth.html" style="display: inline-block; background: #0078d4; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-weight: 600;">Authenticate Now</a></div>';
         if (containerFilter) containerFilter.innerHTML = authMsg;
         if (containerAll) containerAll.innerHTML = authMsg;
-        if (containerLearn) containerLearn.innerHTML = authMsg;
-        if (containerLearnMarked) containerLearnMarked.innerHTML = authMsg;
-        if (containerLearnDeleted) containerLearnDeleted.innerHTML = authMsg;
         if (containerToday) containerToday.innerHTML = authMsg;
+        if (containerE100) containerE100.innerHTML = authMsg;
       }
     }
     
@@ -2146,10 +2379,8 @@
     async function loadSheetData(sheetName = '', forceRefresh = false) {
       const containerFilter = document.getElementById('dataContainerFilterMode');
       const containerAll = document.getElementById('dataContainerAllVocab');
-      const containerLearn = document.getElementById('dataContainerLearnAndLearn');
-      const containerLearnMarked = document.getElementById('dataContainerLearnAndLearnMarked');
-      const containerLearnDeleted = document.getElementById('dataContainerLearnAndLearnDeleted');
       const containerToday = document.getElementById('dataContainerTodayPractice');
+      const containerE100 = document.getElementById('dataContainerE100');
       const cacheInfoDiv = document.getElementById('cacheInfo');
       const worksheetSelect = document.getElementById('worksheetSelect');
       
@@ -2166,17 +2397,11 @@
         if (hasOptions) {
           containerFilter.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
           containerAll.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
-          if (containerLearn) {
-            containerLearn.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
-          }
-          if (containerLearnMarked) {
-            containerLearnMarked.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
-          }
-          if (containerLearnDeleted) {
-            containerLearnDeleted.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
-          }
           if (containerToday) {
             containerToday.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
+          }
+          if (containerE100) {
+            containerE100.innerHTML = '<div class="info">Please select a worksheet to view data</div>';
           }
         }
         // If no options available, the auth message from loadWorksheetsFromCache will be shown
@@ -2198,17 +2423,11 @@
       if (forceRefresh) {
         containerFilter.innerHTML = '<div class="loading">Refreshing data...</div>';
         containerAll.innerHTML = '<div class="loading">Refreshing data...</div>';
-        if (containerLearn) {
-          containerLearn.innerHTML = '<div class="loading">Refreshing data...</div>';
-        }
-        if (containerLearnMarked) {
-          containerLearnMarked.innerHTML = '<div class="loading">Refreshing data...</div>';
-        }
-        if (containerLearnDeleted) {
-          containerLearnDeleted.innerHTML = '<div class="loading">Refreshing data...</div>';
-        }
         if (containerToday) {
           containerToday.innerHTML = '<div class="loading">Refreshing data...</div>';
+        }
+        if (containerE100) {
+          containerE100.innerHTML = '<div class="loading">Refreshing data...</div>';
         }
         cacheInfoDiv.innerHTML = '';
         showNotification('🛜 Fetching fresh data from OneDrive...', 'info', 3000);
@@ -2236,10 +2455,8 @@
               const errorMsg = `<div class="error">${errorMessage} <a href="/auth.html">Authenticate now</a></div>`;
               containerFilter.innerHTML = errorMsg;
               containerAll.innerHTML = errorMsg;
-              if (containerLearn) containerLearn.innerHTML = errorMsg;
-              if (containerLearnMarked) containerLearnMarked.innerHTML = errorMsg;
-              if (containerLearnDeleted) containerLearnDeleted.innerHTML = errorMsg;
               if (containerToday) containerToday.innerHTML = errorMsg;
+              if (containerE100) containerE100.innerHTML = errorMsg;
               if (forceRefresh) {
                 showAuthWarning('🔐 <strong>Authentication Required!</strong> To refresh data from OneDrive, you need to authenticate first. <a class="auth-button" href="/auth.html">Authenticate Now</a>');
                 showNotification('❌ Authentication required for refresh', 'error', 4000);
@@ -2251,10 +2468,8 @@
               const errorMsg = `<div class="error">Error: ${data.error}</div>`;
               containerFilter.innerHTML = errorMsg;
               containerAll.innerHTML = errorMsg;
-              if (containerLearn) containerLearn.innerHTML = errorMsg;
-              if (containerLearnMarked) containerLearnMarked.innerHTML = errorMsg;
-              if (containerLearnDeleted) containerLearnDeleted.innerHTML = errorMsg;
               if (containerToday) containerToday.innerHTML = errorMsg;
+              if (containerE100) containerE100.innerHTML = errorMsg;
               if (forceRefresh) showNotification(`❌ Error: ${data.error}`, 'error', 4000);
               else if (isRequestingSpecificSheet) showNotification(`❌ Failed to load "${sheetName}": ${data.error}`, 'error', 4000);
             }
@@ -2317,9 +2532,7 @@
           if (forceRefresh) {
             allVocabReverseOrder = false;
             const sortBtn = document.getElementById('sortOrderBtn');
-            const sortBtnLearn = document.getElementById('sortOrderBtnLearn');
             if (sortBtn) sortBtn.textContent = '📊 Newest → Oldest';
-            if (sortBtnLearn) sortBtnLearn.textContent = '📊 Newest → Oldest';
           }
           
           // Render data
@@ -2327,8 +2540,8 @@
             containerFilter.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">Click "📍 Newest Topic" button above to filter vocabulary</div>';
           }
           renderAllVocabTabs(data);
-          renderLearnAndLearnTabs(data);
           renderTodayPracticeTab(data);
+          renderE100Tab(data);
         }
       } catch (err) {
         console.error('Failed to load sheet data:', err);
@@ -2337,10 +2550,8 @@
           const errorMsg = `<div class="error">Error: ${err.message}</div>`;
           containerFilter.innerHTML = errorMsg;
           containerAll.innerHTML = errorMsg;
-          if (containerLearn) containerLearn.innerHTML = errorMsg;
-          if (containerLearnMarked) containerLearnMarked.innerHTML = errorMsg;
-          if (containerLearnDeleted) containerLearnDeleted.innerHTML = errorMsg;
           if (containerToday) containerToday.innerHTML = errorMsg;
+          if (containerE100) containerE100.innerHTML = errorMsg;
           clearStats();
         }
         if (forceRefresh) {
@@ -2539,136 +2750,7 @@
       return html;
     }
 
-    // Render tables for Learn and Learn mode (with Mark column)
-    function renderLearnAndLearnTables(data, reverseOrder = false, onlyMarked = false, onlyDeleted = false) {
-      let html = '';
-      let hasAnyRows = false;
-
-      if (data.worksheets && data.worksheets.length > 0) {
-        data.worksheets.forEach(worksheet => {
-          if (worksheet.topics && worksheet.topics.length > 0) {
-            let topicsToRender = [...worksheet.topics];
-            if (reverseOrder) {
-              topicsToRender.reverse();
-            }
-
-            topicsToRender.forEach(topic => {
-              const words = topic.words || [];
-              const filteredWords = words.filter(word => {
-                const key = getLearnWordKey(word, topic.name, worksheet.name);
-                const isMarked = learnMarkedWords.has(key);
-                const isDeleted = learnDeletedWords.has(key);
-
-                if (onlyDeleted) {
-                  return isDeleted;
-                }
-
-                if (isDeleted) {
-                  return false;
-                }
-
-                return onlyMarked ? isMarked : true;
-              });
-
-              if (filteredWords.length === 0) {
-                return;
-              }
-
-              hasAnyRows = true;
-              html += `<h3>📚 ${escapeHtml(topic.name)}</h3>`;
-
-              if (topic.statistics) {
-                html += `<div>📈 Statistics 🆕 New: ${topic.statistics.byFlag.new} | ✅ Known: ${topic.statistics.byFlag.known} | ❓ Forgotten: ${topic.statistics.byFlag.forgotten} | 👍 Learned: ${topic.statistics.byFlag.learned}</div>`;
-              }
-
-              html += `
-                <table>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Flag</th>
-                      <th>Mark</th>
-                      <th>DEL</th>
-                      <th>Word</th>
-                      <th>POS</th>
-                      <th>Pronunciation</th>
-                      <th>Meaning (VI)</th>
-                      <th>Example</th>
-                      <th>Synonyms</th>
-                      <th>Day</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-              `;
-
-              filteredWords.forEach((word, idx) => {
-                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
-                let bgColor = '';
-
-                if (flagValue === 'n') {
-                  bgColor = '#fcdcdf';
-                } else if (flagValue === 'y') {
-                  bgColor = '#c6e0b4';
-                } else if (flagValue === 'ok') {
-                  bgColor = '#fff2cc';
-                } else if (flagValue === '?') {
-                  bgColor = '#ffeb9c';
-                }
-
-                const tdStyle = bgColor ? `background-color: ${bgColor} !important;` : '';
-                const key = getLearnWordKey(word, topic.name, worksheet.name);
-                const encodedKey = encodeURIComponent(key);
-                const isChecked = learnMarkedWords.has(key);
-                const isDeleted = learnDeletedWords.has(key);
-                const deleteLabel = isDeleted ? 'Restore word' : 'Delete word';
-
-                html += `
-                  <tr>
-                    <td style="${tdStyle}">${escapeHtml(word.order || (idx + 1))}</td>
-                    <td style="text-align: center;${tdStyle}">${escapeHtml(word.flag || '')}</td>
-                    <td style="text-align: center;${tdStyle}">
-                      <input class="learn-mark-checkbox" type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleLearnMark('${encodedKey}', this.checked)">
-                    </td>
-                    <td style="text-align: center;${tdStyle}">
-                      <button class="learn-delete-button" type="button" title="${deleteLabel}" aria-label="${deleteLabel}" onclick="toggleLearnDelete('${encodedKey}')">🗑️</button>
-                    </td>
-                    <td style="font-weight: bold;${tdStyle}">${escapeHtml(word.word)}</td>
-                    <td style="${tdStyle}"><em>${escapeHtml(word.partOfSpeech)}</em></td>
-                    <td style="${tdStyle}">${escapeHtml(word.pronunciation)}</td>
-                    <td style="${tdStyle}">${escapeHtml(word.meaning)}</td>
-                    <td style="font-style: italic;${tdStyle}">${boldWordInExample(word.word, word.exampleSentence)}</td>
-                    <td style="${tdStyle}">${escapeHtml(word.synonyms)}</td>
-                    <td style="${tdStyle}">${escapeHtml(word.dayOfWeek)}</td>
-                    <td style="${tdStyle}">${escapeHtml(formatDate(word.date))}</td>
-                  </tr>
-                `;
-              });
-
-              html += `
-                  </tbody>
-                </table>
-                <br>
-              `;
-            });
-          }
-        });
-      }
-
-      if (!hasAnyRows) {
-        if (onlyDeleted) {
-          html = '<div class="info">No deleted words yet.</div>';
-        } else if (onlyMarked) {
-          html = '<div class="info">No marked words yet.</div>';
-        } else {
-          html = '<div class="error">No worksheet data found</div>';
-        }
-      }
-
-      return html;
-    }
-
-    // Render tables for Today practice mode (filter by day of week)
+    // Render tables for Todays mode (filter by day of week)
     function renderTodayPracticeTables(data, reverseOrder = false) {
       let html = '';
       let hasAnyRows = false;
@@ -2795,6 +2877,104 @@
       }
 
       return { tableHtml: html, summaryHtml };
+    }
+
+    function renderE100Table(data, rangeStart, rangeEnd, reverseOrder = false) {
+      let html = '';
+      let hasAnyRows = false;
+
+      if (data.worksheets && data.worksheets.length > 0) {
+        data.worksheets.forEach(worksheet => {
+          if (worksheet.topics && worksheet.topics.length > 0) {
+            let topicsToRender = [...worksheet.topics];
+            if (reverseOrder) {
+              topicsToRender.reverse();
+            }
+
+            topicsToRender.forEach(topic => {
+              const words = topic.words || [];
+              const filteredWords = words.filter((word, idx) => {
+                const orderValue = parseInt(word.order, 10);
+                const normalized = Number.isNaN(orderValue) ? idx + 1 : orderValue;
+                return normalized >= rangeStart && normalized <= rangeEnd;
+              });
+
+              if (filteredWords.length === 0) {
+                return;
+              }
+
+              hasAnyRows = true;
+              html += `<h3>📚 ${escapeHtml(topic.name)}</h3>`;
+
+              if (topic.statistics) {
+                html += `<div>📈 Statistics 🆕 New: ${topic.statistics.byFlag.new} | ✅ Known: ${topic.statistics.byFlag.known} | ❓ Forgotten: ${topic.statistics.byFlag.forgotten} | 👍 Learned: ${topic.statistics.byFlag.learned}</div>`;
+              }
+
+              html += `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Flag</th>
+                      <th>Word</th>
+                      <th>POS</th>
+                      <th>Pronunciation</th>
+                      <th>Meaning (VI)</th>
+                      <th>Example</th>
+                      <th>Synonyms</th>
+                      <th>Day</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+              `;
+
+              filteredWords.forEach((word, idx) => {
+                const flagValue = word.flag ? word.flag.toString().toLowerCase().trim() : '';
+                let bgColor = '';
+
+                if (flagValue === 'n') {
+                  bgColor = '#fcdcdf';
+                } else if (flagValue === 'y') {
+                  bgColor = '#c6e0b4';
+                } else if (flagValue === 'ok') {
+                  bgColor = '#fff2cc';
+                } else if (flagValue === '?') {
+                  bgColor = '#ffeb9c';
+                }
+
+                const tdStyle = bgColor ? `background-color: ${bgColor} !important;` : '';
+                html += `
+                  <tr>
+                    <td style="${tdStyle}">${escapeHtml(word.order || (idx + 1))}</td>
+                    <td style="text-align: center;${tdStyle}">${escapeHtml(word.flag || '')}</td>
+                    <td style="font-weight: bold;${tdStyle}">${escapeHtml(word.word)}</td>
+                    <td style="${tdStyle}"><em>${escapeHtml(word.partOfSpeech)}</em></td>
+                    <td style="${tdStyle}">${escapeHtml(word.pronunciation)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.meaning)}</td>
+                    <td style="font-style: italic;${tdStyle}">${boldWordInExample(word.word, word.exampleSentence)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.synonyms)}</td>
+                    <td style="${tdStyle}">${escapeHtml(word.dayOfWeek)}</td>
+                    <td style="${tdStyle}">${escapeHtml(formatDate(word.date))}</td>
+                  </tr>
+                `;
+              });
+
+              html += `
+                  </tbody>
+                </table>
+                <br>
+              `;
+            });
+          }
+        });
+      }
+
+      if (!hasAnyRows) {
+        html = '<div class="info">No words in this range.</div>';
+      }
+
+      return html;
     }
 
     // Render statistics box
@@ -3223,6 +3403,9 @@
           statsSummary.style.display = 'grid';
         }
         
+        // Load E100 completion counts first
+        await loadE100DoneCounts();
+        
         // Check if we have embedded cached data and display it immediately
         if (window.CACHED_DATA) {
           console.log('Displaying embedded cached data immediately');
@@ -3235,9 +3418,6 @@
         
         // Load sheet URL and name in background (async)
         await loadSheetUrl();
-
-        // Load saved word status for Learn and Learn mode
-        await loadWordStatus();
       } finally {
         hideLoading();
       }
@@ -3276,8 +3456,8 @@
       const containerAll = document.getElementById('dataContainerAllVocab');
       console.log('📝 Rendered HTML length:', renderedData.length);
       if (containerAll) containerAll.innerHTML = renderedData;
-      renderLearnAndLearnTabs(data);
       renderTodayPracticeTab(data);
+      renderE100Tab(data);
       
       console.log('✅ Data display completed instantly');
     }
